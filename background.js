@@ -523,7 +523,12 @@ function downloadNZB(nzbURL, nzbTitle, nzbPassword, category) {
     }
     filename += nzbTitle;
     if (nzbPassword != "") {
-        filename += "{{" + nzbPassword + "}}";
+        if (!/[\/\\%*:"?~<>*|]/.test(nzbPassword)) {
+            filename += "{{" + nzbPassword + "}}";
+        }
+        else {
+            alert("CAUTION: The Password does contain invalid characters and cannot be included in the filename");            
+        }
     }
     filename += ".nzb";
 
