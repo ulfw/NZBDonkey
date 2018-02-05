@@ -474,7 +474,7 @@ function pushNZBtoSABnzbd(nzbURL, nzbTitle, nzbPassword, category) {
                 nzbDonkeyNotification("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType, true);
             }
         } else {
-            nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "Error accessing the server");
+            nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "error accessing the server with error code " + request.status);
             nzbLogging("INFO" + ": " + "sending desktop notification");
             nzbDonkeyNotification("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType, true);
         }
@@ -507,6 +507,7 @@ function categorize(nzbTitle) {
     }
     if (category == "") {
         category = nzbDonkeySettings.categories.defaultCategory;
+        nzbLogging("INFO" + ": " + "no match found, setting category to default category: " + nzbDonkeySettings.categories.defaultCategory);
     }
     return category;
 
@@ -527,7 +528,8 @@ function downloadNZB(nzbURL, nzbTitle, nzbPassword, category) {
             filename += "{{" + nzbPassword + "}}";
         }
         else {
-            alert("CAUTION: The Password does contain invalid characters and cannot be included in the filename");            
+            nzbLogging("INFO" + ": " + "the Password does contain invalid characters and cannot be included in the filename");
+            alert("CAUTION: The Password does contain invalid characters and cannot be included in the filename");          
         }
     }
     filename += ".nzb";
