@@ -154,8 +154,22 @@ function processLink(url) {
         if (link.match(/[?&;][t]=(.*?)(?=(?:[?&;][thgp]=|$))/i)) {
             nzbTitle = link.match(/[?&;][t]=(.*?)(?=(?:[?&;][thgp]=|$))/i)[1];
 
-            // Logging routine
-            nzbLogging("INFO" + ": " + "Found title tag: " + nzbTitle);
+            if (nzbTitle != "") {
+                
+                // Logging routine
+                nzbLogging("INFO" + ": " + "Found title tag: " + nzbTitle);
+                
+            } else {
+                
+                // Logging routine
+                nzbLogging("ERROR" + ": " + "Title tag was empty");
+                
+                nzbTitle = nzbHeader;
+
+                // Logging routine
+                nzbLogging("INFO" + ": " + "Setting header as title tag");
+                
+            }
 
         } else {
 
