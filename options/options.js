@@ -27,18 +27,6 @@ GitHub page: <a href="https://github.com/Tensai75/NZBDonkey">https://github.com/
 <br />
 <br />
 Please open a GitHub issue for support questions.
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
-<br />
 </p>
 `;
 

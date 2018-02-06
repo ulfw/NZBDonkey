@@ -86,14 +86,14 @@
     if (setupRan) { return; }
     var manifest = chrome.runtime.getManifest();
 
-    var extensionName = chrome.options.opts.title || manifest.name || 'chrome';
+/*    var extensionName = chrome.options.opts.title || manifest.name || 'chrome';
     document.querySelector('title').textContent = extensionName + ' options';
     var $title = document.querySelector('.chrome-options-title');
     $title.textContent = extensionName;
     if (chrome.options.opts.title !== false && !urlParams.hideTitle) {
       document.body.classList.add('show-title');
     }
-
+*/
     if (chrome.options.opts.about !== false &&
        (chrome.options.opts.about || manifest.description) &&
         !urlParams.hideAbout) {

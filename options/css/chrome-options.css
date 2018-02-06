@@ -1,15 +1,18 @@
 body {
     background-color: #FFFFFF;
+    text-align: center;
 }
 
-.chrome-bootstrap header {
-  border-bottom: 1px solid #EEE;
-  padding-bottom: 18px;
-  -webkit-padding-after: 0px;
+.frame {
+    display: inline-block;
+    margin: auto;
+    padding-top: 0px;
+    text-align: left;
 }
-.chrome-bootstrap header h1 {
-  border: 0px;
-}
+
+.content {
+    margin-top: 136px;
+}    
 
 .mainview {
     min-height: 542px;
