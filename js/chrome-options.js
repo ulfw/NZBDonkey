@@ -4,9 +4,9 @@
 
 (function() {
   // Expose this library.
-  chrome.options = {};
-  chrome.options.base = {};
-  chrome.options.opts = {
+  options = {};
+  options.base = {};
+  options.opts = {
     // If not given, title of the page will be set to the extension's name.
     // Set to `false` if you want to hide the title.
     title: null,
@@ -53,7 +53,7 @@
     if (setupRan) { return; }
     var manifest = chrome.runtime.getManifest();
 
-    if (chrome.options.opts.autoSave) {
+    if (options.opts.autoSave) {
       $saveButton.style.display = 'none';
     } else {
       $saveContainer.querySelector('.auto').style.display = 'none';
@@ -68,7 +68,7 @@
    * @param {String!} desc Will be placed at the top of the page of the tab
    * @param {Array.<Object>} options
    */
-  chrome.options.addTab = function(name, desc, options) {
+  options.addTab = function(name, desc, options) {
     setup();
     if (!options) {
       options = desc;
@@ -104,10 +104,10 @@
    * @param {String} desc
    * @param {Array.<Object>} options
    */
-  chrome.options.set = function(desc, options) {
+  options.set = function(desc, options) {
     urlParams.hideSidebar = true;
     urlParams.hideTabTitle = true;
-    chrome.options.addTab('', desc, options);
+    options.addTab('', desc, options);
   };
 
   function getKeyPath(parentKey, option) {
@@ -130,13 +130,13 @@
       requestAnimationFrame(cloneValue);
 
       var save = function(newValue) {
-	  if (typeof value === 'undefined' && chrome.options.opts.saveDefaults) {
+	  if (typeof value === 'undefined' && options.opts.saveDefaults) {
         chrome.storage.sync.set({ [key]: newValue });  
 	  } else {
 	    latestValue = newValue;
         requestAnimationFrame(function() {
           var isEqual = util.deepEqual(value, newValue);
-		   if (chrome.options.opts.autoSave) {
+		   if (options.opts.autoSave) {
             if (!isEqual) {
               chrome.storage.sync.set({ [key]: newValue });
               showSavedAlert();
@@ -182,7 +182,7 @@
 
     if (value === undefined && option.default != null) {
       value = option.default;
-      if (chrome.options.opts.saveDefaults) {
+      if (options.opts.saveDefaults) {
         save(value);
       }
     }
@@ -190,19 +190,19 @@
     var $option, r;
     switch (option.type) {
       case 'checkbox':
-        $option = chrome.options.base.checkbox(value, save, option, key);
+        $option = options.base.checkbox(value, save, option, key);
         break;
       case 'object':
-        $option = chrome.options.base.object(value, save, option, key);
+        $option = options.base.object(value, save, option, key);
         break;
       case 'list':
-        $option = chrome.options.base.list(value, save, option, key);
+        $option = options.base.list(value, save, option, key);
         break;
       case 'column':
-        $option = chrome.options.base.column(values, save, option, key, top);
+        $option = options.base.column(values, save, option, key, top);
         break;
       case 'row':
-        $option = chrome.options.base.row(values, save, option, key, top);
+        $option = options.base.row(values, save, option, key, top);
         break;
       case 'h3':
         $option = addH3(option);
@@ -212,14 +212,14 @@
         break;
       default:
         if (!option.type) {
-          $option = chrome.options.base.checkbox(value, save, option, key);
-        } else if (chrome.options.fields[option.type]) {
-          $option = chrome.options.addLabelNField(value, save, option);
+          $option = options.base.checkbox(value, save, option, key);
+        } else if (options.fields[option.type]) {
+          $option = options.addLabelNField(value, save, option);
         } else if ((r = /(\w+)-list/.exec(option.type))) {
-          $option = chrome.options.base
+          $option = options.base
             .singleFieldList(value, save, option, r[1]);
         } else if ((r = /checkbox-(\w+)/.exec(option.type))) {
-          $option = chrome.options.base
+          $option = options.base
             .checkboxNField(value, save, option, r[1]);
         } else {
           throw Error('Could not find option type: ' + option.type);
@@ -236,7 +236,7 @@
     return $option;
   }
 
-  chrome.options.base.checkbox = function(value, save, option, key) {
+  options.base.checkbox = function(value, save, option, key) {
     var $label = h('label');
     var $container = h('.checkbox', $label);
     var $subContainer, $triangle;
@@ -251,7 +251,7 @@
       checked = value.enabled;
     }
 
-    var $checkbox = chrome.options.fields.checkbox(checked, function(checked) {
+    var $checkbox = options.fields.checkbox(checked, function(checked) {
       if (hasOptions) {
         value.enabled = checked;
       } else {
@@ -293,7 +293,7 @@
     return $container;
   };
 
-  chrome.options.base.checkboxNField = function(value, save, option, type) {
+  options.base.checkboxNField = function(value, save, option, type) {
     if (value == null || typeof value !== 'object') {
       value = {};
     }
@@ -306,23 +306,23 @@
       value.value = option.defaultValue;
       mustSave = true;
     }
-    if (mustSave && chrome.options.opts.saveDefaults) {
+    if (mustSave && options.opts.saveDefaults) {
       save(value);
     }
 
-    if (!chrome.options.fields[type]) {
+    if (!options.fields[type]) {
       throw Error('Could not find option type: ' + type);
     }
     var $container = h('.suboption');
     var $box = $container.appendChild(h('span'));
 
     $box
-      .append(chrome.options.fields.checkbox(value.enabled, function(checked) {
+      .append(options.fields.checkbox(value.enabled, function(checked) {
         value.enabled = checked;
         save(value);
       }, option));
 
-    $container.append(chrome.options.addField(value.value, function(newValue) {
+    $container.append(options.addField(value.value, function(newValue) {
       value.value = newValue;
       save(value);
     }, option, type));
@@ -333,7 +333,7 @@
     return $container;
   };
 
-  chrome.options.base.object = function(value, save, option, key) {
+  options.base.object = function(value, save, option, key) {
     var $container = h('.object');
     if (option.desc) {
       $container.append(h('label', option.desc));
@@ -359,9 +359,9 @@
     return $container;
   }
 
-  chrome.options.addLabelNField = function(value, save, option) {
+  options.addLabelNField = function(value, save, option) {
     var $container = h('.suboption');
-    var $field = chrome.options.addField(value, save, option);
+    var $field = options.addField(value, save, option);
     if (option.desc) {
       $container.append(h('label', option.desc));
     }
@@ -370,7 +370,7 @@
     return $container;
   };
 
-  chrome.options.base.list = function(list, save, options, key) {
+  options.base.list = function(list, save, options, key) {
     var $container = h('.suboption.list');
     var $wrapper, shown = true;
 
@@ -667,12 +667,12 @@
           values[field.name] !== undefined ? values[field.name] : field.default;
       }
 
-      if (chrome.options.fields[field.type]) {
-        $field = chrome.options.addField(fieldValue, saveField, field);
+      if (options.fields[field.type]) {
+        $field = options.addField(fieldValue, saveField, field);
       } else if (field.type === 'column') {
-        $field = chrome.options.base.column(values, save, field, key);
+        $field = options.base.column(values, save, field, key);
       } else if (field.type === 'row') {
-        $field = chrome.options.base.row(values, save, field, key);
+        $field = options.base.row(values, save, field, key);
       } else {
         throw Error('Could not find option type: ' + field.type);
       }
@@ -734,12 +734,12 @@
       bindToValue.indexOf(fieldValue) > -1 : bindToValue === fieldValue;
   }
 
-  chrome.options.base.singleFieldList = function(value, save, options, type) {
+  options.base.singleFieldList = function(value, save, options, type) {
     options.fields = [{ type: type, name: options.name }];
-    return chrome.options.base.list(value, save, options);
+    return options.base.list(value, save, options);
   };
 
-  chrome.options.base.column = function(values, save, option, key, top) {
+  options.base.column = function(values, save, option, key, top) {
     delete option.name;
     var $container;
     if (top) {
@@ -752,14 +752,14 @@
     return $container;
   };
 
-  chrome.options.base.row = function(values, save, option, key, top) {
-    var $container =  chrome.options.base.column(values, save, option, key, top);
+  options.base.row = function(values, save, option, key, top) {
+    var $container =  options.base.column(values, save, option, key, top);
     $container.classList.add('row');
     return $container;
   };
 
-  chrome.options.addField = function(value, save, option, type) {
-    var fn = chrome.options.fields[type || option.type];
+  options.addField = function(value, save, option, type) {
+    var fn = options.fields[type || option.type];
     if (!fn) { return; }
     var lastTimeStamp;
     var $field = fn(value, function(newValue, e) {
@@ -788,9 +788,9 @@
 
 
 // Define all available fields.
-chrome.options.fields = {};
+options.fields = {};
 
-chrome.options.fields.checkbox = function(value, save) {
+options.fields.checkbox = function(value, save) {
   var $checkbox = h('input[type=checkbox]');
 
   if (value != null) {
@@ -804,7 +804,7 @@ chrome.options.fields.checkbox = function(value, save) {
   return $checkbox;
 };
 
-chrome.options.fields.text = function(value, save) {
+options.fields.text = function(value, save) {
   var $textbox = h('input[type=text, class="form-control"]');
   if (value !== undefined) {
     $textbox.value = value;
@@ -819,7 +819,7 @@ chrome.options.fields.text = function(value, save) {
   return $textbox;
 };
 
-chrome.options.fields.color = function(value, save, option) {
+options.fields.color = function(value, save, option) {
   var first = true;
   var format = option.format || 'rgba';
   if (!['rgb', 'rgba', 'hsl', 'hsla', 'hex'].includes(format)) {
@@ -862,7 +862,7 @@ chrome.options.fields.color = function(value, save, option) {
     style: value ? `background-color: ${value};` : '',
     onclick: function() { picker.enter(); },
   }));
-  var $field = chrome.options.fields.text(value, function() {
+  var $field = options.fields.text(value, function() {
     if ($alpha) {
       $alpha.value = getAlpha($field.value);
     }
@@ -901,13 +901,13 @@ chrome.options.fields.color = function(value, save, option) {
   return $container;
 };
 
-chrome.options.fields.url = function(value, save, option) {
-  var $field = chrome.options.fields.text(value, save, option);
+options.fields.url = function(value, save, option) {
+  var $field = options.fields.text(value, save, option);
   $field.setAttribute('type', 'url');
   return $field;
 };
 
-chrome.options.fields.select = function(value, save, option) {
+options.fields.select = function(value, save, option) {
   var valueMap = {};
   var $select = h('select', {
     onchange: function(e) {
@@ -929,7 +929,7 @@ chrome.options.fields.select = function(value, save, option) {
   return $select;
 };
 
-chrome.options.fields.radio = function(value, save, option) {
+options.fields.radio = function(value, save, option) {
   var $container = h('.radio-options');
   var name = (~~(Math.random() * 1e9)).toString(36);
   option.options.forEach(function(option) {
@@ -955,7 +955,7 @@ chrome.options.fields.radio = function(value, save, option) {
   return $container;
 };
 
-chrome.options.fields.file = function(value, save) {
+options.fields.file = function(value, save) {
   return h('input[type=file]', {
     value,
     onchange: function(e) {

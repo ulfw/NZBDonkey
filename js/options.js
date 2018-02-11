@@ -17,9 +17,9 @@ $("a.nav-link").click( function() {
     $( $( this ).attr("href") ).css("display","block");
 });
 
-chrome.options.opts.saveDefaults = true;
+options.opts.saveDefaults = true;
 
-chrome.options.addTab('general', [
+options.addTab('general', [
     { type: 'h3', desc: 'Action for NZB files' },
 	{
         name: 'execType',
@@ -63,7 +63,7 @@ chrome.options.addTab('general', [
 	{ type: 'plaintext', text: 'If activated, NZBDonkey will issue debug information in the console.' }
 ]);
 
-chrome.options.addTab('category', [
+options.addTab('category', [
 	{ type: 'h3', desc: 'Use categories' },
 	{
 		name: 'categories',
@@ -111,7 +111,7 @@ chrome.options.addTab('category', [
 	{ type: 'plaintext', text: 'If no automatic category matches, the default category will be used if set.' }
 ]);
 
-chrome.options.addTab('download', [
+options.addTab('download', [
 	{ type: 'h3', desc: 'Default download subfolder' },
 	{
 		name: 'defaultPath', 
@@ -139,7 +139,7 @@ chrome.options.addTab('download', [
     { type: 'plaintext', text: 'Leave it unchecked if you silently want to download the NZB files in the default folder.' },
 ]);
 	
-chrome.options.addTab('nzbget', [
+options.addTab('nzbget', [
 	{ type: 'h3', desc: 'Host name' },
 	{
 		name: 'host', 
@@ -191,7 +191,7 @@ chrome.options.addTab('nzbget', [
 	{ type: 'plaintext', text: 'If checked, the NZB file will be added to NZBGet in pause mode.\nYou will have to unpause it manualy in the NZBGet web gui to start the download.' },
 ]);
 
-chrome.options.addTab('sabnzbd', [
+options.addTab('sabnzbd', [
 	{ type: 'h3', desc: 'Host name' },
 	{
 		name: 'host', 
@@ -228,7 +228,7 @@ chrome.options.addTab('sabnzbd', [
 	{ type: 'plaintext', text: 'It is recommended to use the NZBKey.' },
 ]);
 
-chrome.options.addTab('searchengines', [
+options.addTab('searchengines', [
 	{
 		name: 'searchengines', 
 		type: 'list', 
