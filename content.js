@@ -12,7 +12,7 @@ chrome.runtime.sendMessage({nzbDonkeyCatchLinks: true}, function(response) {
 
             // send the clicked NZBLink URL to the background script
             chrome.runtime.sendMessage({ nzbDonkeyNZBLinkURL: $(this).attr("href") });
-
+            
         });
 
     }

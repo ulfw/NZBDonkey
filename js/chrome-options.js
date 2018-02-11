@@ -27,43 +27,10 @@
   };
 
 
-  var $menu = document.querySelector('#main-menu');
-  var $mainview = document.querySelector('.mainview');
   var lastHash = null;
   var hashPath = window.location.hash.split('.');
   var hashOption = hashPath.length > 1;
   var hashPosition = 1;
-
-  function menuClick() {
-    var newHash = window.location.hash;
-    if (!newHash) {
-      document.querySelector('.mainview > *:nth-child(2)')
-        .classList.add('selected');
-      document.querySelector('#main-menu li:first-child')
-        .classList.add('selected');
-      return;
-    }
-    if (newHash === lastHash) { return; }
-    lastHash = newHash;
-
-    document.querySelectorAll('.mainview > *, .menu li').forEach((el) => {
-      el.classList.remove('selected');
-    });
-
-    hashPath = newHash.split('.');
-    hashOption = hashPath.length > 1;
-
-    var $currentView = document.querySelector(hashPath[0]);
-    if ($currentView) {
-      var $target = document.querySelector('.menu a[href="' + hashPath[0] + '"]');
-      $target.parentNode.classList.add('selected');
-      $currentView.classList.add('selected');
-      document.body.scrollTop = 0;
-    }
-  }
-
-  setTimeout(menuClick, 100);
-  window.addEventListener('hashchange', menuClick);
 
   var urlParams = {};
   window.location.search.substring(1).split('&').forEach(function(param) {
@@ -85,38 +52,6 @@
   function setup() {
     if (setupRan) { return; }
     var manifest = chrome.runtime.getManifest();
-
-/*    var extensionName = chrome.options.opts.title || manifest.name || 'chrome';
-    document.querySelector('title').textContent = extensionName + ' options';
-    var $title = document.querySelector('.chrome-options-title');
-    $title.textContent = extensionName;
-    if (chrome.options.opts.title !== false && !urlParams.hideTitle) {
-      document.body.classList.add('show-title');
-    }
-*/
-    if (chrome.options.opts.about !== false &&
-       (chrome.options.opts.about || manifest.description) &&
-        !urlParams.hideAbout) {
-      document.body.classList.add('show-about');
-      let $about = document.querySelector('#about .content > p');
-      if (chrome.options.opts.about) {
-        $about.innerHTML = chrome.options.opts.about;
-      } else {
-        $about.textContent = manifest.description;
-      }
-    }
-
-    if (!urlParams.hideSidebar) {
-      document.body.classList.add('show-sidebar');
-    }
-
-    if (!urlParams.hideTabTitle) {
-      document.body.classList.add('show-tab-title');
-    }
-
-    if (!urlParams.hideTabDesc) {
-      document.body.classList.add('show-tab-desc');
-    }
 
     if (chrome.options.opts.autoSave) {
       $saveButton.style.display = 'none';
@@ -140,11 +75,8 @@
       desc = null;
     }
     var keyName = name.toLowerCase().replace(' ', '_');
-    var $menuButton = h('li', h('a', { href: `#${keyName}` }, name));
-    $menuButton.querySelector('a').addEventListener('click', menuClick);
-    $menu.append($menuButton);
-    var $tabview = h('div', { id: keyName }, h('header', h('h1', name)));
-    var $tabcontent = h('div.content');
+    var $tabview = h('div', { id: keyName });
+     var $tabcontent = h('div.content');
     if (desc) {
       $tabcontent.append(h('p.tab-desc', desc));
     }
@@ -164,7 +96,7 @@
       addTabOptions($tabcontent, keyName, items, options);
     });
     $tabview.append($tabcontent);
-    $mainview.append($tabview);
+    document.querySelector('#' + keyName + 'Content').append($tabview);
   };
 
 
@@ -232,11 +164,11 @@
   }
 
   function addH3(option) {
-    return !hashOption && h('h3', option.desc);
+    return !hashOption && h('h4', option.desc);
   }
-
-  function addHtml(option) {
-    return !hashOption && h('', { innerHTML: option.html });
+  
+  function addText(option) {
+    return !hashOption && h('p', option.text);
   }
 
   function addOption(key, values, value, save, option, top) {
@@ -252,8 +184,6 @@
       value = option.default;
       if (chrome.options.opts.saveDefaults) {
         save(value);
-
-//		chrome.storage.sync.set({ [key]: value });
       }
     }
 
@@ -277,8 +207,8 @@
       case 'h3':
         $option = addH3(option);
         break;
-      case 'html':
-        $option = addHtml(option);
+      case 'plaintext':
+        $option = addText(option);
         break;
       default:
         if (!option.type) {
@@ -404,7 +334,10 @@
   };
 
   chrome.options.base.object = function(value, save, option, key) {
-    var $container = h('.object', h('label', option.desc));
+    var $container = h('.object');
+    if (option.desc) {
+      $container.append(h('label', option.desc));
+    }
     $container.append(addOptions(value, save, option, key));
     return $container;
   };
@@ -427,8 +360,11 @@
   }
 
   chrome.options.addLabelNField = function(value, save, option) {
-    var $container = h('.suboption', h('label', option.desc || ''));
+    var $container = h('.suboption');
     var $field = chrome.options.addField(value, save, option);
+    if (option.desc) {
+      $container.append(h('label', option.desc));
+    }
     $container.append(h('.field-container', $field));
     $container.classList.add(option.singleline ? 'singleline' : 'multiline');
     return $container;
@@ -869,7 +805,7 @@ chrome.options.fields.checkbox = function(value, save) {
 };
 
 chrome.options.fields.text = function(value, save) {
-  var $textbox = h('input[type=text]');
+  var $textbox = h('input[type=text, class="form-control"]');
   if (value !== undefined) {
     $textbox.value = value;
   }
@@ -1011,79 +947,10 @@ chrome.options.fields.radio = function(value, save, option) {
         }
       },
     }));
-
-    $row.append(h('label', { for: id }, desc));
-  });
-
-  return $container;
-};
-
-chrome.options.fields.predefined_sound = function(value, save, option) {
-  var $container = h('span.predefined-sound');
-  var $play = h('span.play', { onclick: playSound, innerHTML: '&#9654;' });
-
-  var options = [
-    'Basso', 'Bip', 'Blow', 'Boing', 'Bottle', 'Clink-Klank',
-    'Droplet', 'Frog', 'Funk', 'Glass', 'Hero', 'Indigo', 'Laugh',
-    'Logjam', 'Monkey', 'moof', 'Ping', 'Pong2003', 'Pop',
-    'Purr', 'Quack', 'Single Click', 'Sosumi', 'Temple', 'Uh oh',
-    'Voltage', 'Whit', 'Wild Eep'
-  ];
-
-  if (option.allowNoSound) {
-    options.unshift({ value: '', desc: 'Select' });
-    value = value || '';
-    if (!value) { $play.classList.add('disabled'); }
-  } else {
-    value = value || options[0];
-  }
-
-  function saveField(newValue, e) {
-    value = newValue;
-    save(newValue, e);
-  }
-
-  function playSound() {
-    if (!value) {
-      $play.classList.add('disabled');
-      return;
-    }
-    $play.classList.remove('disabled');
-    var audio = new Audio();
-    audio.src = 'bower_components/chrome-options/sounds/' + value + '.wav';
-    audio.onerror = console.error;
-    audio.play();
-  }
-
-  var $field = chrome.options.fields.select(value, saveField, { options });
-  $field.addEventListener('change', playSound);
-  $container.append($field, $play);
-
-  return $container;
-};
-
-chrome.options.fields.custom_sound = function(value, save) {
-  var $container = h('span.custom-sound');
-
-  function saveField(newValue, e) {
-    value = newValue;
-    save(newValue, e);
-  }
-
-  function playSound() {
-    var audio = new Audio();
-    audio.src = value;
-    audio.play();
-  }
-
-  var $field = chrome.options.addField(value, saveField, { type: 'url' });
-  $field.addEventListener('keypress', function(e) {
-    if (e.keyCode === 13) {
-      playSound();
+    if (desc) {
+      $row.append(h('label', { for: id }, desc));
     }
   });
-  $container.append($field);
-  $container.append(h('span.play', { onclick: playSound, innerHTML: '&#9654;' }));
 
   return $container;
 };

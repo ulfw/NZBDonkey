@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name":    "NZBDonkey",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "The ultimate NZB file downloader extension",
 	"icons": {
 		"16": "icons/NZBDonkey_16.png",
@@ -19,14 +19,14 @@
 		"matches": [
 			"<all_urls>"
 		],
-		"js": ["js/jquery.min.js", "js/jquery-impromptu.js", "content.js"],
+		"js": ["js/jquery-3.3.1.js", "js/jquery-impromptu.js", "content.js"],
         "css": ["css/jquery-impromptu.css"],
 		"run_at": "document_end",
 		"all_frames": false
 	}
 	],
 	"options_ui": {
-		"page": "options/options.html",
+		"page": "options.html",
 		"open_in_tab": true
 	},
 	"permissions": [

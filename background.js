@@ -88,6 +88,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 // Add listener for messages from the content script
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.nzbDonkeyCatchLinks) {
+        nzbLogging("INFO" + ": " + "Content script has asked whether to catch left clicks on NZBLinks");
         if (nzbDonkeySettings.general.catchLinks) {
             sendResponse({nzbDonkeyCatchLinks: true});
         } else {
