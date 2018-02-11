@@ -5,16 +5,22 @@ chrome.runtime.sendMessage({nzbDonkeyCatchLinks: true}, function(response) {
     if (response.nzbDonkeyCatchLinks) {
 
         // add an event listener
-        $('a[href^="nzblnk:"]').on("click", function(event){
+        document.addEventListener('click', function(event) {
+            event = event || window.event;
+            var target = event.target || event.srcElement;
 
-            // abort the default action
-            event.preventDefault();
-
-            // send the clicked NZBLink URL to the background script
-            chrome.runtime.sendMessage({ nzbDonkeyNZBLinkURL: $(this).attr("href") });
-            
-        });
-
+            while (target) {
+                if (target instanceof HTMLAnchorElement) {
+                    if (target.getAttribute('href').match(/^nzblnk/i)) {
+                        event.preventDefault();
+                        chrome.runtime.sendMessage({ nzbDonkeyNZBLinkURL: target.getAttribute('href') });
+                    }
+                    break;
+                }
+                target = target.parentNode;
+            }
+        }, true);
+        
     }
 
 });
