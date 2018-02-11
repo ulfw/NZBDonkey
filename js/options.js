@@ -17,9 +17,9 @@ $("a.nav-link").click( function() {
     $( $( this ).attr("href") ).css("display","block");
 });
 
-options.opts.saveDefaults = true;
+nzbDonkeyOptions.opts.saveDefaults = true;
 
-options.addTab('general', [
+nzbDonkeyOptions.addTab('general', [
     { type: 'h3', desc: 'Action for NZB files' },
 	{
         name: 'execType',
@@ -63,7 +63,7 @@ options.addTab('general', [
 	{ type: 'plaintext', text: 'If activated, NZBDonkey will issue debug information in the console.' }
 ]);
 
-options.addTab('category', [
+nzbDonkeyOptions.addTab('category', [
 	{ type: 'h3', desc: 'Use categories' },
 	{
 		name: 'categories',
@@ -111,7 +111,7 @@ options.addTab('category', [
 	{ type: 'plaintext', text: 'If no automatic category matches, the default category will be used if set.' }
 ]);
 
-options.addTab('download', [
+nzbDonkeyOptions.addTab('download', [
 	{ type: 'h3', desc: 'Default download subfolder' },
 	{
 		name: 'defaultPath', 
@@ -139,7 +139,7 @@ options.addTab('download', [
     { type: 'plaintext', text: 'Leave it unchecked if you silently want to download the NZB files in the default folder.' },
 ]);
 	
-options.addTab('nzbget', [
+nzbDonkeyOptions.addTab('nzbget', [
 	{ type: 'h3', desc: 'Host name' },
 	{
 		name: 'host', 
@@ -191,7 +191,7 @@ options.addTab('nzbget', [
 	{ type: 'plaintext', text: 'If checked, the NZB file will be added to NZBGet in pause mode.\nYou will have to unpause it manualy in the NZBGet web gui to start the download.' },
 ]);
 
-options.addTab('sabnzbd', [
+nzbDonkeyOptions.addTab('sabnzbd', [
 	{ type: 'h3', desc: 'Host name' },
 	{
 		name: 'host', 
@@ -228,7 +228,7 @@ options.addTab('sabnzbd', [
 	{ type: 'plaintext', text: 'It is recommended to use the NZBKey.' },
 ]);
 
-options.addTab('searchengines', [
+nzbDonkeyOptions.addTab('searchengines', [
 	{
 		name: 'searchengines', 
 		type: 'list', 
