@@ -26,7 +26,7 @@ function loadSettings() {
     chrome.storage.sync.get(null, function(obj) {
         for (key in obj) {
             keys = key.split(".");
-            if (keys[0] == 'search_engines') {
+            if (keys[0] == 'searchengines') {
                 nzbDonkeySettings[keys[1]] = obj[key];
             } else {
                 if (typeof nzbDonkeySettings[keys[0]] === 'undefined') {
@@ -257,27 +257,27 @@ function searchNZB(nzbHeader, nzbTitle, nzbPassword) {
     var request = [];
     var re = []
     var nzbURL = "";
-    var counter = nzbDonkeySettings.searchEngines.length;
+    var counter = nzbDonkeySettings.searchengines.length;
 
     // starting a http request for all search engines
-    for (var i = 0; i < nzbDonkeySettings.searchEngines.length; i++) {
-        if (nzbDonkeySettings.searchEngines[i].active) { // but only for "active" search engines
+    for (var i = 0; i < nzbDonkeySettings.searchengines.length; i++) {
+        if (nzbDonkeySettings.searchengines[i].active) { // but only for "active" search engines
             (function(i) {
                 request[i] = new XMLHttpRequest();
                 request[i].addEventListener('load', function(event) {
 
-                    nzbLogging("INFO" + ": " + nzbDonkeySettings.searchEngines[i].name + ": " + "http response code is" + " " + request[i].status);
+                    nzbLogging("INFO" + ": " + nzbDonkeySettings.searchengines[i].name + ": " + "http response code is" + " " + request[i].status);
 
                     if (request[i].status >= 200 && request[i].status < 300) {
-                        re[i] = new RegExp(nzbDonkeySettings.searchEngines[i].searchPattern, "i");
-                        nzbLogging("INFO" + ": " + nzbDonkeySettings.searchEngines[i].name + " search pattern: " + nzbDonkeySettings.searchEngines[i].searchPattern);
+                        re[i] = new RegExp(nzbDonkeySettings.searchengines[i].searchPattern, "i");
+                        nzbLogging("INFO" + ": " + nzbDonkeySettings.searchengines[i].name + " search pattern: " + nzbDonkeySettings.searchengines[i].searchPattern);
                         if (re[i].test(request[i].responseText)) {
                             // the first hit will be the winner
                             if (nzbURL == "") {
 
-                                nzbLogging("INFO" + ": " + nzbDonkeySettings.searchEngines[i].name + ": " + "NZB file found");
+                                nzbLogging("INFO" + ": " + nzbDonkeySettings.searchengines[i].name + ": " + "NZB file found");
 
-                                nzbURL = nzbDonkeySettings.searchEngines[i].downloadURL.replace(/%s/, request[i].responseText.match(re[i])[nzbDonkeySettings.searchEngines[i].searchGroup]);
+                                nzbURL = nzbDonkeySettings.searchengines[i].downloadURL.replace(/%s/, request[i].responseText.match(re[i])[nzbDonkeySettings.searchengines[i].searchGroup]);
 
                                 nzbLogging("INFO" + ": " + "NZB URL is" + ": " + nzbURL);
 
@@ -285,37 +285,37 @@ function searchNZB(nzbHeader, nzbTitle, nzbPassword) {
                                 counter -= 1;
                             } else {
 
-                                nzbLogging("INFO" + ": " + nzbDonkeySettings.searchEngines[i].name + ": " + "NZB file found but someone was faster");
+                                nzbLogging("INFO" + ": " + nzbDonkeySettings.searchengines[i].name + ": " + "NZB file found but someone was faster");
 
                             }
 
                         } else {
 
-                            nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchEngines[i].name + ": " + "Nothing found");
+                            nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchengines[i].name + ": " + "Nothing found");
                             counter -= 1;
                             catchError();
 
                         }
                     } else {
 
-                        nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchEngines[i].name + ": " + "Error accessing the server");
+                        nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchengines[i].name + ": " + "Error accessing the server");
                         counter -= 1;
                         catchError();
 
                     }
                 });
                 request[i].addEventListener('error', function(event) {
-                    nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchEngines[i].name + ": " + "http response code is" + " " + request[i].status);
-                    nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchEngines[i].name + ": " + "the server is not responding");
+                    nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchengines[i].name + ": " + "http response code is" + " " + request[i].status);
+                    nzbLogging("ERROR" + ": " + nzbDonkeySettings.searchengines[i].name + ": " + "the server is not responding");
                     counter -= 1;
                     catchError();
 
                 });
-                request[i].open("GET", nzbDonkeySettings.searchEngines[i].searchURL.replace(/%s/, encodeURI(nzbHeader)), true);
+                request[i].open("GET", nzbDonkeySettings.searchengines[i].searchURL.replace(/%s/, encodeURI(nzbHeader)), true);
                 request[i].timeout = 10000;
                 request[i].send();
 
-                nzbLogging("INFO" + ": " + "Requesting URL" + ": " + nzbDonkeySettings.searchEngines[i].searchURL.replace(/%s/, encodeURI(nzbHeader)));
+                nzbLogging("INFO" + ": " + "Requesting URL" + ": " + nzbDonkeySettings.searchengines[i].searchURL.replace(/%s/, encodeURI(nzbHeader)));
 
             })(i);
         }
@@ -398,9 +398,6 @@ function pushNZBtoNZBGET(nzbURL, nzbTitle, nzbPassword, category) {
     var addPaused = (nzbDonkeySettings.nzbget.addPaused) ? 1 : 0;
 
     var filename = nzbTitle;
-    if (nzbPassword != "") {
-        filename += "{{" + nzbPassword + "}}";
-    }
     filename += ".nzb";
 
     nzbLogging("INFO" + ": " + "filename is set to" + ": " + filename);
@@ -414,8 +411,13 @@ function pushNZBtoNZBGET(nzbURL, nzbTitle, nzbPassword, category) {
         '<param><value><boolean>' + addPaused + '</boolean></value></param>' + // AddPaused
         '<param><value><string></string></value></param>' + // DupeKey
         '<param><value><i4>0</i4></value></param>' + // DupeScore
-        '<param><value><string>ALL</string></value></param>' + // DupeMode
-        '</params></methodCall>';
+        '<param><value><string>ALL</string></value></param>'; // DupeMode
+
+    if (nzbPassword != "") {
+        data  += '<param><value><array><data><value><string>*unpack:password</string></value><value><string>' + nzbPassword + '</string></value></data></array></value></param>'; // Password 
+    }        
+        
+    data += '</params></methodCall>';
 
     var request = new XMLHttpRequest();
     request.addEventListener('load', function(event) {
