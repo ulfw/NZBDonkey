@@ -10,8 +10,12 @@ Download for Firefox: [Firefox Add-on](https://addons.mozilla.org/de/firefox/add
 ## Description
 Add-on to automatically download NZB files or send them to NZBGet or SABnzbd.
 
-Currently in beta testing.
+Right click on a NZBlnk link and choose "Get NZB file". If no NZBlnk is provided, select title, header and password, then right click on the selected text and choose "Get NZB file".
 
+Set the correpsonding settings in the settings page in order to send the NZB file directly to NZBGet or SABnzbd.
+The setting options are mostly self explanatory.
+
+Currently in beta testing.
 A more detailed description will be added soon.
 
 ## Change log
