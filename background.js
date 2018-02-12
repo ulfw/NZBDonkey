@@ -338,13 +338,13 @@ function nzbUrlProcess(nzbURL, nzbTitle, nzbPassword) {
     nzbLogging("INFO" + ": " + "processing the NZB URL");
 
     var category = "";
-    switch (nzbDonkeySettings.categories.categories) {
+    switch (nzbDonkeySettings.category.categories) {
         case "automatic":
             category = categorize(nzbTitle);
             break;
 
         case "default":
-            category = nzbDonkeySettings.categories.defaultCategory;
+            category = nzbDonkeySettings.category.defaultCategory;
             break;
     }
 
@@ -514,17 +514,17 @@ function pushNZBtoSABnzbd(nzbURL, nzbTitle, nzbPassword, category) {
 function categorize(nzbTitle) {
 
     var category = "";
-    for (var i = 0; i < nzbDonkeySettings.categories.automaticCategories.length; i++) {
-        var re = new RegExp(nzbDonkeySettings.categories.automaticCategories[i].pattern, "i");
-        nzbLogging("INFO" + ": " + "testing for category " + nzbDonkeySettings.categories.automaticCategories[i].name);
+    for (var i = 0; i < nzbDonkeySettings.category.automaticCategories.length; i++) {
+        var re = new RegExp(nzbDonkeySettings.category.automaticCategories[i].pattern, "i");
+        nzbLogging("INFO" + ": " + "testing for category " + nzbDonkeySettings.category.automaticCategories[i].name);
         if (re.test(nzbTitle)) {
-            category = nzbDonkeySettings.categories.automaticCategories[i].name;
+            category = nzbDonkeySettings.category.automaticCategories[i].name;
             break;
         }
     }
     if (category == "") {
-        category = nzbDonkeySettings.categories.defaultCategory;
-        nzbLogging("INFO" + ": " + "no match found, setting category to default category: " + nzbDonkeySettings.categories.defaultCategory);
+        category = nzbDonkeySettings.category.defaultCategory;
+        nzbLogging("INFO" + ": " + "no match found, setting category to default category: " + nzbDonkeySettings.category.defaultCategory);
     }
     return category;
 
