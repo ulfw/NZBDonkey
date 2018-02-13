@@ -19,6 +19,13 @@ Currently in beta testing.
 A more detailed description will be added soon.
 
 ## Change log
+### v0.1.6
+* NZB file are now downloaded and pushed to the download programs instead of only pushing the download URL
+* Meta data for title, category and password is added to the NZB file before saving it or pushing it to the download programs
+* Added an option to reset the settings to the default settings
+* Added an option to push the NZB file to SABnzbd as paused
+* Changed communication with NZBGet from XML-RPC to JSON-RPC for better handling 
+
 ### v0.1.5
 * Bugfix: wrongly named settings variable for category
 

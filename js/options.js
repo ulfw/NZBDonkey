@@ -4,17 +4,24 @@ var content = document.createTextNode(manifest.version);
 NZBDonkeyVersion.appendChild(content);
 
 $("a.nav-link").click( function() {
-    // Get all elements with class="tabcontent" and hide them
-    $(".tabcontent").each(function(index) {
-        $( this ).css("display","none");
-    });
-    // Get all elements with class="tablinks" and remove the class "active"
-    $(".nav-link").each(function(index) {
-        $( this ).removeClass( "active" );
-    });
-    // Show the selected tab, and add an "active" class to the link that opened the tab
-    $( this ).addClass( "active" );
-    $( $( this ).attr("href") ).css("display","block");
+    if ($( this ).attr("href") == "#reset") {
+        if (confirm("Reset all settings to default?")) {
+            chrome.storage.sync.clear();
+            window.location.reload();
+        }
+    } else {
+        // Get all elements with class="tabcontent" and hide them
+        $(".tabcontent").each(function(index) {
+            $( this ).css("display","none");
+        });
+        // Get all elements with class="tablinks" and remove the class "active"
+        $(".nav-link").each(function(index) {
+            $( this ).removeClass( "active" );
+        });
+        // Show the selected tab, and add an "active" class to the link that opened the tab
+        $( this ).addClass( "active" );
+        $( $( this ).attr("href") ).css("display","block");
+    }
 });
 
 nzbDonkeyOptions.opts.saveDefaults = true;
@@ -137,6 +144,7 @@ nzbDonkeyOptions.addTab('download', [
 	},
 	{ type: 'plaintext', text: 'If checked NZBDonkey will prompt you with a "Save As" dialog in order for you to choose the folder where you would like to save the NZB file.\n' },
     { type: 'plaintext', text: 'Leave it unchecked if you silently want to download the NZB files in the default folder.' },
+    { type: 'plaintext', text: 'CAUTION: due to a bug in Chrome, silent download will only work if Chrome setting "Ask where to save each file before downloading" is disabled.' },
 ]);
 	
 nzbDonkeyOptions.addTab('nzbget', [
@@ -226,6 +234,14 @@ nzbDonkeyOptions.addTab('sabnzbd', [
 	},
 	{ type: 'plaintext', text: 'Enter either the SABnzbd ApiKey or the SABnzbd NZBKey. Get it from the general settings page of your SABnzbd server.\n' },
 	{ type: 'plaintext', text: 'It is recommended to use the NZBKey.' },
+	{ type: 'h3', desc: 'Add to SABnzbd in pause mode' },
+	{
+		name: 'addPaused',
+		type: 'checkbox',
+		desc: 'add as paused',
+		default: false
+	},
+	{ type: 'plaintext', text: 'If checked, the NZB file will be added to SABnzbd in pause mode.\nYou will have to unpause it manualy in the SABnzbd web gui to start the download.' }
 ]);
 
 nzbDonkeyOptions.addTab('searchengines', [

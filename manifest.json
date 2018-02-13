@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name":    "NZBDonkey",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "The ultimate NZB file downloader extension",
 	"icons": {
 		"16": "icons/NZBDonkey_16.png",

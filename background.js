@@ -366,58 +366,132 @@ function nzbUrlProcess(nzbURL, nzbTitle, nzbPassword) {
 
     }
 
+    downloadNZBfile(nzbURL, nzbTitle, nzbPassword, category);
+    
+}
+
+function downloadNZBfile(nzbURL, nzbTitle, nzbPassword, category) {
+
+    var request = new XMLHttpRequest();
+    request.addEventListener('load', function(event) {
+
+        nzbLogging("INFO" + ": " + "NZB file download" + ": " + "http response code is" + " " + request.status);
+
+        if (request.status >= 200 && request.status < 300) {
+            var nzbFile = request.responseText;
+            if (nzbFile.match(/<nzb.*>/i)) {
+                nzbLogging("INFO" + ": " + "the downloaded file is a valid NZB file");
+                processNZBfile(nzbFile, nzbTitle, nzbPassword, category);
+            } else {
+                nzbLogging("ERROR" + ": " + "the downloaded file is not a valid NZB file");
+                nzbLogging("INFO" + ": " + "sending desktop notification");
+                nzbDonkeyNotification("ERROR" + ": " + "the downloaded file is not a valid NZB file", true);    
+            }
+            
+        } else {
+            nzbLogging("ERROR" + ": " + "an error occurred while downloading the NZB file");
+            nzbLogging("INFO" + ": " + "sending desktop notification");
+            nzbDonkeyNotification("ERROR" + ": " + "an error occurred while downloading the NZB file", true);
+        }
+    });
+    request.addEventListener('error', function(event) {
+        nzbLogging("ERROR" + ": " + "NZB file download" + ": " + "http response code is" + " " + request.status);
+        nzbLogging("ERROR" + ": " + "NZB file download" + ": " + "The site is not responding");
+        nzbLogging("INFO" + ": " + "sending desktop notification");
+        nzbDonkeyNotification("ERROR" + ": " + "an error occurred while downloading the NZB file. The site is not responding.", true);
+    });
+    request.open("GET", nzbURL, true);
+    request.timeout = 10000;
+    request.send();
+
+    nzbLogging("INFO" + ": " + "downloading NZB file from url: " + nzbURL);    
+    
+}
+
+function processNZBfile(nzbFile, nzbTitle, nzbPassword, category) {
+
+    var nzbMetadata = '';
+    
+    if (!nzbTitle.match(/[&"\'<>]/)) {
+        nzbMetadata += '\t<meta type="title">' + nzbTitle + '</meta>\n';
+        nzbLogging("INFO" + ": " + "NZB file meta data: title tag set to " + nzbTitle);
+    } else {
+        nzbLogging("INFO" + ": " + "NZB file meta data: could not set title tag due to invalid characters");
+    }
+    if (nzbPassword != '' && !nzbPassword.match(/[&"\'<>]/)) {
+        nzbMetadata += '\t<meta type="password">' + nzbPassword + '</meta>\n';
+        nzbLogging("INFO" + ": " + "NZB file meta data: password tag set to " + nzbPassword);
+    } else {
+        nzbLogging("INFO" + ": " + "NZB file meta data: could not set password tag due to invalid characters");
+    }    
+    if (category != '' && !category.match(/[&"\'<>]/)) {
+        nzbMetadata += '\t<meta type="category">' + category + '</meta>\n';
+        nzbLogging("INFO" + ": " + "NZB file meta data: category tag set to " + category);
+    } else {
+        nzbLogging("INFO" + ": " + "NZB file meta data: could not set category tag due to invalid characters");
+    }
+    
+    if (nzbFile.match(/<head>/i)) {
+        nzbFile = nzbFile.replace(/<head>/i, '<head>\n' + nzbMetadata );
+    } else {
+        nzbFile = nzbFile.replace(/(<nzb.*>)/i, '$1\n<head>\n' + nzbMetadata + '</head>' );
+    }
+
     switch (nzbDonkeySettings.general.execType) {
         case "download":
-            downloadNZB(nzbURL, nzbTitle, nzbPassword, category);
+            downloadNZB(nzbFile, nzbTitle, nzbPassword, category);
             break;
 
         case "nzbget":
-            pushNZBtoNZBGET(nzbURL, nzbTitle, nzbPassword, category);
+            pushNZBtoNZBGET(nzbFile, nzbTitle, nzbPassword, category);
             break;
 
         case "sabnzbd":
-            pushNZBtoSABnzbd(nzbURL, nzbTitle, nzbPassword, category);
+            pushNZBtoSABnzbd(nzbFile, nzbTitle, nzbPassword, category);
             break;
-    }
-
+    }    
+ 
 }
 
-function pushNZBtoNZBGET(nzbURL, nzbTitle, nzbPassword, category) {
+function pushNZBtoNZBGET(nzbFile, nzbTitle, nzbPassword, category) {
 
     var scheme = nzbDonkeySettings.nzbget.scheme;
     var host = nzbDonkeySettings.nzbget.host.match(/^(?:https{0,1}:\d?\/\/)?([^\/:]+)/i)[1]
     var port = nzbDonkeySettings.nzbget.port.match(/[^\d]*(\d*)[^\d]*/)[1];
     var username = nzbDonkeySettings.nzbget.username;
     var password = nzbDonkeySettings.nzbget.password;
-    var basepath = "xmlrpc";
+    var basepath = "jsonrpc";
 
     var url = scheme + "://" + host + ":" + port + "/" + basepath + "/";
 
     nzbLogging("INFO" + ": " + "NZBGet URL is set to" + ": " + url);
-
-    var addPaused = (nzbDonkeySettings.nzbget.addPaused) ? 1 : 0;
 
     var filename = nzbTitle;
     filename += ".nzb";
 
     nzbLogging("INFO" + ": " + "filename is set to" + ": " + filename);
 
-    var data = '<?xml version="1.0"?><methodCall><methodName>append</methodName><params>' +
-        '<param><value><string>' + filename + '.nzb</string></value></param>' + // Filename
-        '<param><value><string>' + nzbURL + '</string></value></param>' + // Content (NZB File)
-        '<param><value><string>' + category + '</string></value></param>' + // Category
-        '<param><value><i4>0</i4></value></param>' + // Priority
-        '<param><value><boolean>0</boolean></value></param>' + // AddToTop
-        '<param><value><boolean>' + addPaused + '</boolean></value></param>' + // AddPaused
-        '<param><value><string></string></value></param>' + // DupeKey
-        '<param><value><i4>0</i4></value></param>' + // DupeScore
-        '<param><value><string>ALL</string></value></param>'; // DupeMode
-
-    if (nzbPassword != "") {
-        data  += '<param><value><array><data><value><string>*unpack:password</string></value><value><string>' + nzbPassword + '</string></value></data></array></value></param>'; // Password 
-    }        
-        
-    data += '</params></methodCall>';
+    var params = [
+        filename, // Filename
+        btoa(nzbFile), // Content (NZB File)
+        category, // Category
+        0, // Priority
+        false, // AddToTop
+        nzbDonkeySettings.nzbget.addPaused, // AddPaused
+        "", // DupeKey
+        0, // DupeScore
+        "Force", // DupeMode
+        [
+         { "*unpack:password" : nzbPassword } // Post processing parameter: Password
+        ]
+    ];
+    
+    var data = JSON.stringify({ 
+        "version" : "1.1",
+        "id" : 1,
+        "method" : "append", 
+        "params" : params
+    });
 
     var request = new XMLHttpRequest();
     request.addEventListener('load', function(event) {
@@ -425,8 +499,8 @@ function pushNZBtoNZBGET(nzbURL, nzbTitle, nzbPassword, category) {
         nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + ": " + "http response code is" + " " + request.status);
 
         if (request.status >= 200 && request.status < 300) {
-            var response = parseInt(request.responseText.match(/.*>(-{0,1}\d+)<.*/)[1]);
-            if (response > 0) {
+            var response = JSON.parse(request.responseText);
+            if (response.result > 0) {
                 nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + " " + "returned a success code");
                 nzbLogging("INFO" + ": " + "sending desktop notification");
                 nzbDonkeyNotification("The NZB file was successfully pushed to" + " " + nzbDonkeySettings.general.execType, false);
@@ -456,7 +530,7 @@ function pushNZBtoNZBGET(nzbURL, nzbTitle, nzbPassword, category) {
 
 }
 
-function pushNZBtoSABnzbd(nzbURL, nzbTitle, nzbPassword, category) {
+function pushNZBtoSABnzbd(nzbFile, nzbTitle, nzbPassword, category) {
 
     var scheme = nzbDonkeySettings.sabnzbd.scheme;
     var host = nzbDonkeySettings.sabnzbd.host.match(/^(?:https{0,1}:\d?\/\/)?([^\/:]+)/i)[1]
@@ -470,15 +544,25 @@ function pushNZBtoSABnzbd(nzbURL, nzbTitle, nzbPassword, category) {
     filename += ".nzb";
     nzbLogging("INFO" + ": " + "filename is set to" + ": " + filename);
 
-    var url = scheme + "://" + host + ":" + port + "/" + basepath + "/api?mode=addurl&name=" + encodeURIComponent(nzbURL) + "&nzbname=" + encodeURIComponent(filename) + "&cat=" + encodeURIComponent(category) + "&output=json&apikey=" + encodeURIComponent(apiKey);
-
-    nzbLogging("INFO" + ": " + "SABnzbd URL is set to" + ": " + url);
+    var addPaused = (nzbDonkeySettings.sabnzbd.addPaused) ? -2 : -100;
+    
+    var content = new Blob([nzbFile], { type: "text/xml" } );
+    var formData = new FormData();
+    
+    formData.append("mode", "addfile");
+    formData.append("output", "json");
+    formData.append("apikey", apiKey);
+    formData.append("nzbname", filename);
+    formData.append("cat", category);
+    formData.append("priority", addPaused);
+    formData.append("name", content);
+    
+    var url = scheme + "://" + host + ":" + port + "/" + basepath + "/api";
 
     var request = new XMLHttpRequest();
     request.addEventListener('load', function(event) {
 
         nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + ": " + "http response code is" + " " + request.status);
-
         if (request.status >= 200 && request.status < 300) {
             var response = JSON.parse(request.responseText);
             if (response.status) {
@@ -502,14 +586,13 @@ function pushNZBtoSABnzbd(nzbURL, nzbTitle, nzbPassword, category) {
         nzbLogging("INFO" + ": " + "sending desktop notification");
         nzbDonkeyNotification("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "The server is not responding", true);
     });
-    request.open("GET", url, true);
+    request.open("POST", url, true);
     request.timeout = 10000;
-    request.send();
+    request.send(formData);
 
     nzbLogging("INFO" + ": " + "pushing to SABnzbd");
    
 }
-
 
 function categorize(nzbTitle) {
 
@@ -530,7 +613,7 @@ function categorize(nzbTitle) {
 
 }
 
-function downloadNZB(nzbURL, nzbTitle, nzbPassword, category) {
+function downloadNZB(nzbFile, nzbTitle, nzbPassword, category) {
 
     var filename = ""
     if (nzbDonkeySettings.download.defaultPath != "") {
@@ -546,7 +629,7 @@ function downloadNZB(nzbURL, nzbTitle, nzbPassword, category) {
         }
         else {
             nzbLogging("INFO" + ": " + "the Password does contain invalid characters and cannot be included in the filename");
-            alert("CAUTION: The Password does contain invalid characters and cannot be included in the filename");          
+            var passwordWarning = "CAUTION: The Password did contain invalid characters and was not included in the filename";          
         }
     }
     filename += ".nzb";
@@ -554,7 +637,7 @@ function downloadNZB(nzbURL, nzbTitle, nzbPassword, category) {
     nzbLogging("INFO" + ": " + "filename is set to" + ": " + filename);
 
     chrome.downloads.download({
-        url: nzbURL,
+        url: 'data:application/octet-stream,' + encodeURIComponent(nzbFile),
         filename: filename,
         saveAs: nzbDonkeySettings.download.saveAs,
         conflictAction: "uniquify"
@@ -562,8 +645,11 @@ function downloadNZB(nzbURL, nzbTitle, nzbPassword, category) {
     chrome.downloads.onCreated.addListener(function(item) {
         nzbLogging("INFO" + ": " + "starting download");
         nzbLogging("INFO" + ": " + "sending desktop notification");
-        nzbDonkeyNotification("Starting download of file" + ":\n" + filename, false);
+        var notificationString = "Starting download of file" + ":\n" + filename;
+        if (passwordWarning) {
+            notificationString += notificationString + '\n' + passwordWarning;
+        }
+        nzbDonkeyNotification(notificationString, false);
+        
     });
-
-}
-
+ }
