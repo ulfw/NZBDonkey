@@ -467,7 +467,6 @@ function pushNZBtoNZBGET(nzbFile, nzbTitle, nzbPassword, category) {
     nzbLogging("INFO" + ": " + "NZBGet URL is set to" + ": " + url);
 
     var filename = nzbTitle;
-    filename += ".nzb";
 
     nzbLogging("INFO" + ": " + "filename is set to" + ": " + filename);
 
@@ -541,7 +540,6 @@ function pushNZBtoSABnzbd(nzbFile, nzbTitle, nzbPassword, category) {
     if (nzbPassword != "") {
         filename += "{{" + nzbPassword + "}}";
     }
-    filename += ".nzb";
     nzbLogging("INFO" + ": " + "filename is set to" + ": " + filename);
 
     var addPaused = (nzbDonkeySettings.sabnzbd.addPaused) ? -2 : -100;
