@@ -401,7 +401,7 @@ function downloadNZBfile(nzbURL, nzbTitle, nzbPassword, category) {
         nzbDonkeyNotification("ERROR" + ": " + "an error occurred while downloading the NZB file. The site is not responding.", true);
     });
     request.open("GET", nzbURL, true);
-    request.timeout = 10000;
+    request.timeout = 60000;
     request.send();
 
     nzbLogging("INFO" + ": " + "downloading NZB file from url: " + nzbURL);    
