@@ -34,10 +34,10 @@ $(document).ready(function() {
     $("[id^=menu_]").each(function(index) {
         $( this ).css("display","none");
     });
-    $('input[type=radio][id$=_radio]:checked').each(function(index) {
+    $('input[type=radio][name^=execType_]:checked').each(function(index) {
         $("#menu_" + this.value).css("display","block");
     });
-    $('input[type=radio][id$=_radio]').change(function() {
+    $('input[type=radio][name^=execType_]').change(function() {
         $("[id^=menu_]").each(function(index) {
             $( this ).css("display","none");
         });
@@ -55,7 +55,7 @@ nzbDonkeyOptions.addTab('general', [
 		options: [
 			{ desc : 'Download', value : 'download' },
 			{ desc : 'Send to NZBGet', value : 'nzbget' },
-			{ desc : 'Send to Sabnzbd', value : 'sabnzbd' },
+			{ desc : 'Send to SABnzbd', value : 'sabnzbd' },
 //			{ desc : 'Send to Synology DwonloadStation', value : 'synology' }
 		],
 		default: 'download'

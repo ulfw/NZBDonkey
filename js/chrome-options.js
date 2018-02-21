@@ -931,11 +931,11 @@ nzbDonkeyOptions.fields.select = function(value, save, option) {
 
 nzbDonkeyOptions.fields.radio = function(value, save, option) {
   var $container = h('.radio-options');
-  var name = (~~(Math.random() * 1e9)).toString(36);
+  var name = option.name + "_" + (~~(Math.random() * 1e9)).toString(36);
   option.options.forEach(function(option) {
     var val = typeof option === 'object' ? option.value : option;
     var desc = typeof option === 'object' ? option.desc : option;
-    var id = val + "_radio"; //(~~(Math.random() * 1e9)).toString(36);
+    var id = val + "_" + (~~(Math.random() * 1e9)).toString(36);
     var $row = $container.appendChild(h('.radio-option'));
     var $radio = $row.appendChild(h('input[type=radio]', {
       id, name,
