@@ -620,9 +620,11 @@ function downloadNZB(nzbFile, nzbTitle, nzbPassword, category) {
     filename += ".nzb";
 
     nzbLogging("INFO" + ": " + "filename is set to" + ": " + filename);
+	
+    var blob = new Blob([nzbFile], {type: "text/xml;charset=utf-8"})
 
     chrome.downloads.download({
-        url: 'data:application/octet-stream,' + encodeURIComponent(nzbFile),
+        url: URL.createObjectURL(blob),
         filename: filename,
         saveAs: nzbDonkeySettings.download.saveAs,
         conflictAction: "uniquify"
