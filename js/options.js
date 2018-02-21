@@ -82,6 +82,14 @@ nzbDonkeyOptions.addTab('general', [
 		default: false
 	},
 	{ type: 'plaintext', text: 'If activated, NZBDonkey will catch and handle left mouse clicks on a NZBLink.' },
+	{ type: 'h3', desc: 'Show success notifications' },
+	{
+		name: 'showNotifications',
+		type: 'checkbox',
+		desc: 'Show sucess notifications',
+		default: true
+	},
+	{ type: 'plaintext', text: 'Deactivate if you do not want to be notified upon success. Error notifications will always be shown.' },
 	{ type: 'h3', desc: 'Debug Mode' },
 	{
 		name: 'debug',

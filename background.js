@@ -121,7 +121,6 @@ function processAnalysedSelection(selection) {
     } else {
         // Logging routine
         nzbLogging("INFO" + ": " + "no header information found");
-        nzbLogging("INFO" + ": " + "sending desktop notification");
 
         nzbDonkeyNotification("ERROR" + ": " + "no header information found" + "\n", true);
 
@@ -212,9 +211,6 @@ function processLink(url) {
             // Logging routine
             nzbLogging("ERROR" + ": " + "the NZB link is missing a header tag");
 
-            // Logging routine
-            nzbLogging("INFO" + ": " + "sending desktop notification");
-
             nzbDonkeyNotification("ERROR" + ": " + "the NZB link is missing a header tag" + "\n", true);
 
             // Logging routine
@@ -225,9 +221,6 @@ function processLink(url) {
 
         // Logging routine
         nzbLogging("ERROR" + ": " + "this is not a NZB link");
-
-        // Logging routine
-        nzbLogging("INFO" + ": " + "sending desktop notification");
 
         nzbDonkeyNotification("ERROR" + ": " + "this is not a NZB link" + "\n", true);
 
@@ -246,12 +239,15 @@ function nzbLogging(loggingText) {
 
 // Notification routine
 function nzbDonkeyNotification(message, isError) {
-    chrome.notifications.create("nzbDonkeyNotification", {
-        type: 'basic',
-        iconUrl: "icons/NZBDonkey_128.png",
-        title: 'NZBDonkey',
-        message: message
-    });
+	if (nzbDonkeySettings.general.showNotifications || isError) {
+        nzbLogging("INFO" + ": " + "sending desktop notification");
+		chrome.notifications.create("nzbDonkeyNotification", {
+            type: 'basic',
+            iconUrl: "icons/NZBDonkey_128.png",
+            title: 'NZBDonkey',
+            message: message
+        });
+    }
 }
 
    
@@ -329,8 +325,6 @@ function searchNZB(nzbHeader, nzbTitle, nzbPassword) {
 
             nzbLogging("ERROR" + ": " + "No NZB file found on any NZB search engine");
 
-            nzbLogging("INFO" + ": " + "sending desktop notification");
-
             nzbDonkeyNotification("ERROR" + ": " + "No NZB file found on any NZB search engine", true);
 
         }
@@ -388,20 +382,17 @@ function downloadNZBfile(nzbURL, nzbTitle, nzbPassword, category) {
                 processNZBfile(nzbFile, nzbTitle, nzbPassword, category);
             } else {
                 nzbLogging("ERROR" + ": " + "the downloaded file is not a valid NZB file");
-                nzbLogging("INFO" + ": " + "sending desktop notification");
                 nzbDonkeyNotification("ERROR" + ": " + "the downloaded file is not a valid NZB file", true);    
             }
             
         } else {
             nzbLogging("ERROR" + ": " + "an error occurred while downloading the NZB file");
-            nzbLogging("INFO" + ": " + "sending desktop notification");
             nzbDonkeyNotification("ERROR" + ": " + "an error occurred while downloading the NZB file", true);
         }
     });
     request.addEventListener('error', function(event) {
         nzbLogging("ERROR" + ": " + "NZB file download" + ": " + "http response code is" + " " + request.status);
         nzbLogging("ERROR" + ": " + "NZB file download" + ": " + "The site is not responding");
-        nzbLogging("INFO" + ": " + "sending desktop notification");
         nzbDonkeyNotification("ERROR" + ": " + "an error occurred while downloading the NZB file. The site is not responding.", true);
     });
     request.open("GET", nzbURL, true);
@@ -505,23 +496,19 @@ function pushNZBtoNZBGET(nzbFile, nzbTitle, nzbPassword, category) {
             var response = JSON.parse(request.responseText);
             if (response.result > 0) {
                 nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + " " + "returned a success code");
-                nzbLogging("INFO" + ": " + "sending desktop notification");
                 nzbDonkeyNotification("The NZB file was successfully pushed to" + " " + nzbDonkeySettings.general.execType, false);
             } else {
                 nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + " " + "returned an error code");
-                nzbLogging("INFO" + ": " + "sending desktop notification");
                 nzbDonkeyNotification("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType, true);
             }
         } else {
             nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "Error accessing the server");
-            nzbLogging("INFO" + ": " + "sending desktop notification");
             nzbDonkeyNotification("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType, true);
         }
     });
     request.addEventListener('error', function(event) {
         nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "http response code is" + " " + request.status);
         nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "Not responding");
-        nzbLogging("INFO" + ": " + "sending desktop notification");
         nzbDonkeyNotification("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "The server is not responding", true);
     });
     request.open("POST", url, true);
@@ -569,23 +556,19 @@ function pushNZBtoSABnzbd(nzbFile, nzbTitle, nzbPassword, category) {
             var response = JSON.parse(request.responseText);
             if (response.status) {
                 nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + " " + "returned a success code");
-                nzbLogging("INFO" + ": " + "sending desktop notification");
                 nzbDonkeyNotification("The NZB file was successfully pushed to" + " " + nzbDonkeySettings.general.execType, false);
             } else {
                 nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + " " + "returned an error code");
-                nzbLogging("INFO" + ": " + "sending desktop notification");
                 nzbDonkeyNotification("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType, true);
             }
         } else {
             nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "error accessing the server with error code " + request.status);
-            nzbLogging("INFO" + ": " + "sending desktop notification");
             nzbDonkeyNotification("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType, true);
         }
     });
     request.addEventListener('error', function(event) {
         nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "http response code is" + " " + request.status);
         nzbLogging("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "Not responding");
-        nzbLogging("INFO" + ": " + "sending desktop notification");
         nzbDonkeyNotification("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "The server is not responding", true);
     });
     request.open("POST", url, true);
@@ -646,7 +629,6 @@ function downloadNZB(nzbFile, nzbTitle, nzbPassword, category) {
     });
     chrome.downloads.onCreated.addListener(function(item) {
         nzbLogging("INFO" + ": " + "starting download");
-        nzbLogging("INFO" + ": " + "sending desktop notification");
         var notificationString = "Starting download of file" + ":\n" + filename;
         if (passwordWarning) {
             notificationString += notificationString + '\n' + passwordWarning;
