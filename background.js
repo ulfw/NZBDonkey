@@ -1,7 +1,11 @@
 // listen for the on Installed event
 chrome.runtime.onInstalled.addListener(function(details) {
-    // open the options page to have the default settings saved
-    chrome.runtime.openOptionsPage();
+    if (details.OnInstalledReason != 'chrome_update') {
+        // delete the stored searchengines settings to force loading the default settings
+        chrome.storage.sync.remove('searchengines.searchengines');
+        // open the options page to have the default settings saved
+        chrome.runtime.openOptionsPage();
+    }
 });
 
 // Set up context menu on script start
