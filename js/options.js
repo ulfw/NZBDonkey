@@ -9,7 +9,13 @@ $("a.nav-link").click( function() {
             chrome.storage.sync.clear();
             window.location.reload();
         }
-    } else {
+		return;
+	} else if ($( this ).attr("href") == "#advanced") {
+        if (!confirm("CAUTION: These settings are for advanced users only!\nAre you sure you want to proceed to the advanced settings?")) {
+			return;
+		}
+    } 
+	
         // Get all elements with class="tabcontent" and hide them
         $(".tabcontent").each(function(index) {
             $( this ).css("display","none");
@@ -21,7 +27,22 @@ $("a.nav-link").click( function() {
         // Show the selected tab, and add an "active" class to the link that opened the tab
         $( this ).addClass( "active" );
         $( $( this ).attr("href") ).css("display","block");
-    }
+    
+});
+
+$(document).ready(function() {
+    $("[id^=menu_]").each(function(index) {
+        $( this ).css("display","none");
+    });
+    $('input[type=radio][id$=_radio]:checked').each(function(index) {
+        $("#menu_" + this.value).css("display","block");
+    });
+    $('input[type=radio][id$=_radio]').change(function() {
+        $("[id^=menu_]").each(function(index) {
+            $( this ).css("display","none");
+        });
+        $("#menu_" + this.value).css("display","block");
+    });
 });
 
 nzbDonkeyOptions.opts.saveDefaults = true;
@@ -246,6 +267,7 @@ nzbDonkeyOptions.addTab('sabnzbd', [
 ]);
 
 nzbDonkeyOptions.addTab('searchengines', [
+	{ type: 'h3', desc: 'Search Engines' },
 	{
 		name: 'searchengines', 
 		type: 'list', 
