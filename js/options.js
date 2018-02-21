@@ -40,6 +40,7 @@ nzbDonkeyOptions.addTab('general', [
 		default: 'download'
 	},
 	{ type: 'plaintext', text: 'Choose what NZBDonkey shall do with the NZB file if found. You will need to the set the further settings in the corresponding tab.' },
+	
 	{ type: 'h3', desc: 'How to handle spaces/periods in the title/filename' },
 	{
 		name: 'processTitel',
@@ -267,15 +268,15 @@ nzbDonkeyOptions.addTab('searchengines', [
 		default: [
 			{
 				"active": true,
-				"downloadURL": "https://www.newzleech.com/?m=gen&dl=1&post=%s",
+				"downloadURL": "https://newzleech.com/?m=gen&dl=1&post=%s",
 				"name": "Newzleecher",
 				"searchPattern": "name=\"binary\\[\\]\" value=\"(.*?)\"",
 				"searchGroup": 1,
-				"searchURL": "https://www.newzleech.com/?m=search&q=%s"
+				"searchURL": "https://newzleech.com/?m=search&q=%s"
 			},
 			{
 				"active": true,
-				"downloadURL": "http://nzbindex.com/download/%s/",
+				"downloadURL": "https://nzbindex.com/download/%s/",
 				"name": "NZBIndex",
 				"searchPattern": "label for=\"box(\\d{8,})\".*?class=\"highlight\"",
 				"searchGroup": 1,
@@ -283,7 +284,7 @@ nzbDonkeyOptions.addTab('searchengines', [
 			},
 			{
 				"active": true,
-				"downloadURL": "http://www.binsearch.info/?action=nzb&%s=1",
+				"downloadURL": "https://binsearch.info/?action=nzb&%s=1",
 				"name": "BinSearch",
 				"searchPattern": "name=\"(\\d{9,})\"",
 				"searchGroup": 1,
@@ -291,7 +292,7 @@ nzbDonkeyOptions.addTab('searchengines', [
 			},
 			{
 				"active": true,
-				"downloadURL": "http://www.binsearch.info/?action=nzb&%s=1&server=2",
+				"downloadURL": "https://binsearch.info/?action=nzb&%s=1&server=2",
 				"name": "BinSearch (other groups)",
 				"searchPattern": "name=\"(\\d{9,})\"",
 				"searchGroup": 1,
@@ -299,11 +300,11 @@ nzbDonkeyOptions.addTab('searchengines', [
 			},
 			{
 				"active": true,
-				"downloadURL": "http://www.nzbking.com/nzb:%s",
+				"downloadURL": "http://nzbking.com/nzb:%s",
 				"name": "NZBKing",
 				"searchPattern": "href=\"\\/details:(.*?)\\/\"",
 				"searchGroup": 1,
-				"searchURL": "http://www.nzbking.com/search/?q=%s"
+				"searchURL": "http://nzbking.com/search/?q=%s"
 			}
 		],
 	}
