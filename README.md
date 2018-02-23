@@ -8,17 +8,27 @@ Download for Chrome: [Chrome Webstore](https://chrome.google.com/webstore/detail
 Download for Firefox: [Firefox Add-on](https://addons.mozilla.org/de/firefox/addon/nzbdonkey/)
 
 ## Description
-Add-on to automatically download NZB files or send them to NZBGet or SABnzbd.
+Add-on to automatically download NZB files or send them to NZBGet, SABnzbd or Synology DownloadStation.
 
-Right click on a NZBlnk link and choose "Get NZB file". If no NZBlnk is provided, select title, header and password, then right click on the selected text and choose "Get NZB file".
+Right click on a NZBlnk link and choose "Get NZB file". If no NZBlnk link is provided, select title, header and password, then right click on the selected text and choose "Get NZB file".
 
-Set the corresponding settings in the settings page in order to send the NZB file directly to NZBGet or SABnzbd.
+Set the corresponding settings in the settings page in order to send the NZB file directly to NZBGet, SABnzbd or Synology DownloadStation.
 The setting options are mostly self explanatory.
 
 Currently in beta testing.
 A more detailed description will be added soon.
 
 ## Change log
+### v0.1.7
+* Added support for Synology DownloadStation. CAUTION: Due to a bug in the Synology API the submitted unpack password is not recognized! See also corresponding note in the NZBMonkey documentation: (http://nzblnk.tech/nzb-monkey/#synologydls-section)
+* Updated Settings Page to show only the relevant tab according to the choosen action for the NZB file.
+* Renamed "Search Engines" tab to "Advanced" and added a warning alert.
+* Added an option to deactivate success notifications
+* Switched all search and download URLs to https where possible. Stored Search Engines settings will be overwritten upon update.
+* Changed default for "Catch left mouse clicks on NZBlnk links" to true
+* Small improvements to the selection analyzing routine
+* Some additional bugfixes
+
 ### v0.1.6
 * NZB file are now downloaded and pushed to the download programs instead of only pushing the download URL
 * Meta data for title, category and password is added to the NZB file before saving it or pushing it to the download programs

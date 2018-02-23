@@ -444,8 +444,12 @@ function processNZBfile(nzbFile, nzbTitle, nzbPassword, category) {
         case "sabnzbd":
             pushNZBtoSABnzbd(nzbFile, nzbTitle, nzbPassword, category);
             break;
-    }    
- 
+			
+		case "synology":
+			pushNZBtoSynology(nzbFile, nzbTitle, nzbPassword, category);
+			break;
+    }
+
 }
 
 function pushNZBtoNZBGET(nzbFile, nzbTitle, nzbPassword, category) {
@@ -579,6 +583,86 @@ function pushNZBtoSABnzbd(nzbFile, nzbTitle, nzbPassword, category) {
    
 }
 
+function pushNZBtoSynology(nzbFile, nzbTitle, nzbPassword, category) {
+
+	nzbLogging("INFO" + ": " + "pushing to Synology DownloadStation");
+
+	var options = {
+		"scheme": nzbDonkeySettings.synology.scheme,
+		"host": nzbDonkeySettings.synology.host,
+		"port": nzbDonkeySettings.synology.port,
+		"basepath": "webapi/",
+		"path": "query.cgi",
+		"parameters": {
+			"api": "SYNO.API.Info",
+			"version": 1,
+			"method": "query",
+			"query": "SYNO.API.Auth,SYNO.DownloadStation.Task"
+		},
+		"responseType": "text",
+		"timeout": 10000
+	};
+
+	var SynoData = {};
+
+	xhr(options).then(function(result) {
+
+		SynoData = JSON.parse(result);
+		if (SynoData.success) {
+			options.path = SynoData.data['SYNO.API.Auth'].path;
+			options.parameters = {
+				"api": "SYNO.API.Auth",
+				"version": SynoData.data['SYNO.API.Auth'].maxVersion,
+				"method": "login",
+				"account": nzbDonkeySettings.synology.username,
+				"passwd": nzbDonkeySettings.synology.password,
+				"session": (~~(Math.random() * 1e9)).toString(36),
+				"format": "cookie"
+			};
+			return xhr(options);
+		} else {
+			throw Error("Synology Diskstation responded with error code " + SynoData.error.code)
+		}
+
+	}).then(function(result) {
+
+		var SynoAuthData = JSON.parse(result);
+		if (SynoAuthData.success) {
+			options.path = SynoData.data['SYNO.DownloadStation.Task'].path;
+			delete options.parameters;
+			var content = new Blob([nzbFile], { type: "text/xml" });
+			var formData = new FormData();
+			formData.append("api", "SYNO.DownloadStation.Task");
+			formData.append("version", SynoData.data['SYNO.DownloadStation.Task'].maxVersion);
+			formData.append("method", "create");
+			formData.append("unzip_password", nzbPassword);
+			formData.append("_sid", SynoAuthData.data.sid);
+			formData.append("file", content, nzbTitle + ".nzb");
+			options.data = formData;
+			options.timeout = 60000;
+			return xhr(options);
+		} else {
+			throw Error("Synology Diskstation responded with error code " + SynoAuthData.error.code)
+		}
+
+	}).then(function(result) {
+
+		var SynoResponseData = JSON.parse(result);
+		if (SynoResponseData.success) {
+            nzbLogging("INFO" + ": " + nzbDonkeySettings.general.execType + " " + "returned a success code");
+            nzbDonkeyNotification("The NZB file was successfully pushed to" + " " + nzbDonkeySettings.general.execType, false);
+		} else {
+			throw Error("Synology Diskstation responded with error code " + SynoResponseData.error.code)
+		}	
+
+	}).catch(function(e) {
+        nzbLogging("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType);
+		console.log(e);
+        nzbDonkeyNotification("ERROR" + ": " + "an error occurred while pushing the NZB file to" + " " + nzbDonkeySettings.general.execType, true);	
+	});
+
+}
+
 function categorize(nzbTitle) {
 
     var category = "";
@@ -639,3 +723,92 @@ function downloadNZB(nzbFile, nzbTitle, nzbPassword, category) {
         
     });
  }
+ 
+ 
+function xhr(options) {
+/*
+	options = {
+		"url":  url,
+		"scheme": scheme,
+		"host": host,
+		"port": port,
+		"basepath": basepath,
+		"path": path,
+		"parameters": {
+			"parameter1": value1,
+			"parameter2": value2
+		},
+		"data": data,
+		"responseType": responseType,
+		"timeout": timeout
+	}
+	
+	xhr(options).then(function(result) {
+		console.log(result);
+	}).catch(function(error) {
+		console.log(error);
+	});
+*/
+			
+	if (options.url) {
+		var url = options.url;
+	} else {
+		var url = "";
+		if (options.scheme) {
+			url += options.scheme + "://";
+		}
+		if (options.host) {
+			url += options.host.match(/^(?:https{0,1}:\d?\/\/)?([^\/:]+)/i)[1];
+		}					
+		if (options.port) {
+			url +=	":" + options.port.match(/[^\d]*(\d*)[^\d]*/)[1];
+		}
+		if (url != "") {
+			url += "/";
+		}
+		if (options.basepath) {
+			url += options.basepath;
+		}
+		if (options.path) {
+			url += options.path;
+		}			
+		if (options.parameters) {
+			var str = "";
+			for (var key in options.parameters) {
+				if (str != "") {
+					str += "&";
+				}
+				str += key + "=" + encodeURIComponent(options.parameters[key]);
+			}
+		url += "?" + str;
+		}
+	}
+	
+	var method = options.data ? "POST" : "GET";
+	
+	return new Promise(function(resolve, reject) {
+		var request = new XMLHttpRequest();
+		if (options.responseType) {
+			request.responseType = options.responseType;
+		}
+		request.onreadystatechange = function() {
+			if (request.readyState === XMLHttpRequest.DONE) {
+				if (request.status === 200) {
+					resolve(request.responseText);
+				} else {
+					var errorMsg = "The server responded with error code " + request.status;
+					if (request.statusText) {
+						errorMsg += " (" + request.statusText + ")";
+					}
+					reject(new Error(errorMsg));
+				}
+			}
+		};
+		request.onerror = function() {
+			reject(new Error("Network error"));
+		};
+		request.open(method, url, true);
+		request.timeout = options.timeout;
+		request.send(options.data);
+	});
+}

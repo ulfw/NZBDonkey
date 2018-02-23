@@ -67,7 +67,10 @@ function NZBDonkeyOptions() {
 				}, {
 					desc: 'Send to SABnzbd',
 					value: 'sabnzbd'
-				},
+				}, {
+					desc: 'Send to Synology DownloadStation',
+					value: 'synology'
+				}
 			],
 			default: 'download'
 		}, {
@@ -97,15 +100,15 @@ function NZBDonkeyOptions() {
 			text: 'Choose what NZBDonkey shall do with periods and spaces in the NZB title/filename.'
 		}, {
 			type: 'h3',
-			desc: 'Catch left mouse clicks on NZB links'
+			desc: 'Catch left mouse clicks on NZBlnk links'
 		}, {
 			name: 'catchLinks',
 			type: 'checkbox',
-			desc: 'Catch NZB links',
-			default: false
+			desc: 'Catch NZBlnk links',
+			default: true
 		}, {
 			type: 'plaintext',
-			text: 'If activated, NZBDonkey will catch and handle left mouse clicks on a NZBLink.'
+			text: 'If activated, NZBDonkey will catch and handle left mouse clicks on a NZBlnk link.'
 		}, {
 			type: 'h3',
 			desc: 'Show success notifications'
@@ -384,6 +387,68 @@ function NZBDonkeyOptions() {
 		type: 'plaintext',
 		text: 'If checked, the NZB file will be added to SABnzbd in pause mode.\nYou will have to unpause it manualy in the SABnzbd web gui to start the download.'
 	}]);
+
+	nzbDonkeyOptions.addTab('synology', [{
+		type: 'h3',
+		desc: 'Host name'
+	}, {
+		name: 'host',
+		type: 'text',
+		default: 'localhost'
+	}, {
+		type: 'plaintext',
+		text: 'Enter the host name or IP address of your Synology Diskstation.'
+	}, {
+		type: 'h3',
+		desc: 'Port'
+	}, {
+		name: 'port',
+		type: 'text',
+		default: '5000'
+	}, {
+		type: 'plaintext',
+		text: 'Enter the port number to be used to connect to your Synology Diskstation. Usually this is 5000 for http and 5001 for https connections.'
+	}, {
+		type: 'h3',
+		desc: 'Connection scheme'
+	}, {
+		name: 'scheme',
+		type: 'radio',
+		options: [{
+			desc: 'connect via secure https',
+			value: 'https'
+		}, {
+			desc: 'connect via normal http',
+			value: 'http'
+		}, ],
+		default: 'http'
+	}, {
+		type: 'plaintext',
+		text: 'Choose whether to connect to your Synology Diskstation via normal http or secure https connection.'
+	}, {
+		type: 'h3',
+		desc: 'Username'
+	}, {
+		name: 'username',
+		type: 'text',
+		default: ''
+	}, {
+		type: 'plaintext',
+		text: 'Enter the username to access the Synology Diskstation.\n'
+	}, {
+		type: 'plaintext',
+		text: 'This user needs to have sufficient rights to use the DownloadStation.\n'
+	}, {
+		type: 'h3',
+		desc: 'Password'
+	}, {
+		name: 'password',
+		type: 'text',
+		default: ''
+	}, {
+		type: 'plaintext',
+		text: 'Enter the password for above user to access the Synology Diskstation.'
+	}, ]);
 
 	nzbDonkeyOptions.addTab('searchengines', [{
 		type: 'h3',
