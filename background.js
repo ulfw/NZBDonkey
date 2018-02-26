@@ -597,7 +597,7 @@ function pushNZBtoSynology(nzbFile, nzbTitle, nzbPassword, category) {
 			"api": "SYNO.API.Info",
 			"version": 1,
 			"method": "query",
-			"query": "SYNO.API.Auth,SYNO.DownloadStation.Task"
+			"query": "SYNO.API.Auth,SYNO.DownloadStation2.Task"
 		},
 		"responseType": "text",
 		"timeout": 20000
@@ -628,16 +628,22 @@ function pushNZBtoSynology(nzbFile, nzbTitle, nzbPassword, category) {
 
 		var SynoAuthData = JSON.parse(result);
 		if (SynoAuthData.success) {
-			options.path = SynoData.data['SYNO.DownloadStation.Task'].path;
+			options.path = SynoData.data['SYNO.DownloadStation2.Task'].path;
 			delete options.parameters;
 			var content = new Blob([nzbFile], { type: "text/xml" });
 			var formData = new FormData();
-			formData.append("api", "SYNO.DownloadStation.Task");
-			formData.append("version", SynoData.data['SYNO.DownloadStation.Task'].maxVersion);
+			formData.append("api", "SYNO.DownloadStation2.Task");
 			formData.append("method", "create");
-			formData.append("unzip_password", nzbPassword);
+			formData.append("version", SynoData.data['SYNO.DownloadStation2.Task'].maxVersion);
+			formData.append("type", "\"file\"");
+			formData.append("destination", "\"\"");
+			formData.append("create_list", false);
+			formData.append("mtime", Date.now());
+			formData.append("size", content.size);
+			formData.append("file", "[\"torrent\"]");
+			formData.append("extract_password", '"' + nzbPassword + '"');
 			formData.append("_sid", SynoAuthData.data.sid);
-			formData.append("file", content, nzbTitle + ".nzb");
+			formData.append("torrent", content, nzbTitle + ".nzb");
 			options.data = formData;
 			options.timeout = 120000;
 			return xhr(options);
