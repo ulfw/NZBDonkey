@@ -312,7 +312,7 @@ function searchNZB(nzbHeader, nzbTitle, nzbPassword) {
 
                 });
                 request[i].open("GET", nzbDonkeySettings.searchengines[i].searchURL.replace(/%s/, encodeURI(nzbHeader)), true);
-                request[i].timeout = 10000;
+                request[i].timeout = 20000;
                 request[i].send();
 
                 nzbLogging("INFO" + ": " + "Requesting URL" + ": " + nzbDonkeySettings.searchengines[i].searchURL.replace(/%s/, encodeURI(nzbHeader)));
@@ -396,7 +396,7 @@ function downloadNZBfile(nzbURL, nzbTitle, nzbPassword, category) {
         nzbDonkeyNotification("ERROR" + ": " + "an error occurred while downloading the NZB file. The site is not responding.", true);
     });
     request.open("GET", nzbURL, true);
-    request.timeout = 60000;
+    request.timeout = 120000;
     request.send();
 
     nzbLogging("INFO" + ": " + "downloading NZB file from url: " + nzbURL);    
@@ -517,7 +517,7 @@ function pushNZBtoNZBGET(nzbFile, nzbTitle, nzbPassword, category) {
     });
     request.open("POST", url, true);
     request.setRequestHeader("Authorization", "Basic " + btoa(username + ":" + password));
-    request.timeout = 10000;
+    request.timeout = 120000;
     request.send(data);
 
     nzbLogging("INFO" + ": " + "pushing to NZBGet");
@@ -576,7 +576,7 @@ function pushNZBtoSABnzbd(nzbFile, nzbTitle, nzbPassword, category) {
         nzbDonkeyNotification("ERROR" + ": " + nzbDonkeySettings.general.execType + ": " + "The server is not responding", true);
     });
     request.open("POST", url, true);
-    request.timeout = 10000;
+    request.timeout = 120000;
     request.send(formData);
 
     nzbLogging("INFO" + ": " + "pushing to SABnzbd");
@@ -600,7 +600,7 @@ function pushNZBtoSynology(nzbFile, nzbTitle, nzbPassword, category) {
 			"query": "SYNO.API.Auth,SYNO.DownloadStation.Task"
 		},
 		"responseType": "text",
-		"timeout": 10000
+		"timeout": 20000
 	};
 
 	var SynoData = {};
@@ -639,7 +639,7 @@ function pushNZBtoSynology(nzbFile, nzbTitle, nzbPassword, category) {
 			formData.append("_sid", SynoAuthData.data.sid);
 			formData.append("file", content, nzbTitle + ".nzb");
 			options.data = formData;
-			options.timeout = 60000;
+			options.timeout = 120000;
 			return xhr(options);
 		} else {
 			throw Error("Synology Diskstation responded with error code " + SynoAuthData.error.code)
