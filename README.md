@@ -19,6 +19,9 @@ Currently in beta testing.
 A more detailed description will be added soon.
 
 ## Change log
+### v0.2.1
+* Bug fix for: Failed to execute 'btoa' on 'Window': The string to be encoded contains characters outside of the Latin1 range.
+
 ### v0.2.0
 * Added support for Synology DownloadStation.
 * Updated Settings Page to show only the relevant tab according to the chosen action for the NZB file.
