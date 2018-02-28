@@ -738,6 +738,8 @@ function xhr(options) {
 		"scheme": scheme,
 		"host": host,
 		"port": port,
+		"username": username,
+		"password": password,
 		"basepath": basepath,
 		"path": path,
 		"parameters": {
@@ -810,10 +812,13 @@ function xhr(options) {
 				}
 			}
 		};
+		request.ontimeout = function() {
+			reject(new Error("Connection timed out"));
+		};
 		request.onerror = function() {
 			reject(new Error("Network error"));
 		};
-		request.open(method, url, true);
+		request.open(method, url, true, options.username, options.password);
 		request.timeout = options.timeout;
 		request.send(options.data);
 	});
