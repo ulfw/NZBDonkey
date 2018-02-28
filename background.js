@@ -471,7 +471,7 @@ function pushNZBtoNZBGET(nzbFile, nzbTitle, nzbPassword, category) {
 
     var params = [
         filename, // Filename
-        btoa(nzbFile), // Content (NZB File)
+        btoa(unescape(encodeURIComponent(nzbFile))), // Content (NZB File)
         category, // Category
         0, // Priority
         false, // AddToTop
