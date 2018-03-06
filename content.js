@@ -109,9 +109,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     }
                     else if (v === "open") {
                         sendResponse({
-                            nzbTitle : f.ftitle,
-                            nzbHeader : f.fhead,
-                            nzbPassword : f.fpass
+                            title : f.ftitle,
+                            header : f.fhead,
+                            password : f.fpass
                         });
                     }
                 }

@@ -11,40 +11,72 @@ $(document).ready(function() {
 	var NZBDonkeyVersionContent = document.createTextNode(manifest.version);
 	NZBDonkeyVersion.appendChild(NZBDonkeyVersionContent);
 
+    $("[id^=TestButton]").click(function() {
+        let button = $(this);
+        button.prop("disabled",true);
+        button.html("Testing connection...")
+        chrome.runtime.sendMessage({nzbDonkeyTestConnection: true}, function(response) {
+            if (response.success) {
+                $("#TestSuccessBody").html(response.response.replace(/\n/gi, "<br />")); 
+                $("#TestSuccess").modal("show");
+            }
+            else {
+                $("#TestWarningBody").html(response.response.replace(/\n/gi, "<br />"));  
+                $("#TestWarning").modal("show");
+            }
+            button.html("Test Connection");
+            button.prop("disabled",false);
+        });
+    });
+    
 	$("a.nav-link").click(function() {
-		if ($(this).attr("href") == "#reset") {
-			if (confirm("Reset all settings to default?")) {
-				chrome.storage.sync.clear();
-				window.location.reload();
-			}
-			return;
-		} else if ($(this).attr("href") == "#advanced") {
-			if (!confirm("CAUTION: These settings are for advanced users only!\nAre you sure you want to proceed to the advanced settings?")) {
-				return;
-			}
-		}
-
-		// Get all elements with class="tabcontent" and hide them
-		$(".tabcontent").each(function(index) {
-			$(this).css("display", "none");
-		});
-		// Get all elements with class="tablinks" and remove the class "active"
-		$(".nav-link").each(function(index) {
-			$(this).removeClass("active");
-		});
-		// Show the selected tab, and add an "active" class to the link that opened the tab
-		$(this).addClass("active");
-		$($(this).attr("href")).css("display", "block");
+        
+        switch($(this).attr("href")) {
+            case "#reset":
+                $("#ResetWarning").modal("show");
+                $("#ResetWarningConfirmed").click(function() {
+                    $(this).off();
+                    $("#ResetWarning").modal("hide");
+                    chrome.storage.sync.clear();
+                    window.location.reload();
+                });
+                break;
+            case "#advanced":
+                $("#AdvancedWarning").modal("show");
+                let tab = $(this);
+                $("#AdvancedWarningConfirmed").click(function() {
+                    $(this).off();
+                    $("#AdvancedWarning").modal("hide");
+                    switchTabs(tab);
+                });
+                break;
+            default:
+                switchTabs($(this));
+        }
 
 	});
 
 
-	$('#generalContent').on("change", "input[type=radio][name^=execType_]", function() {
+	$("#generalContent").on("change", "input[type=radio][name^=execType_]", function() {
 		$("[id^=menu_]").each(function(index) {
 			$(this).css("display", "none");
 		});
 		$("#menu_" + this.value).css("display", "block");
 	});
+    
+    function switchTabs(tab) {
+        // Get all elements with class="tabcontent" and hide them
+        $(".tabcontent").each(function(index) {
+            $(this).css("display", "none");
+        });
+        // Get all elements with class="tablinks" and remove the class "active"
+        $(".nav-link").each(function(index) {
+            $(this).removeClass("active");
+        });
+        // Show the selected tab, and add an "active" class to the link that opened the tab
+        tab.addClass("active");
+        $(tab.attr("href")).css("display", "block");    
+    }
 
 });
 
@@ -127,7 +159,7 @@ function NZBDonkeyOptions() {
 			name: 'debug',
 			type: 'checkbox',
 			desc: 'Activate debug mode',
-			default: false
+			default: true
 		}, {
 			type: 'plaintext',
 			text: 'If activated, NZBDonkey will issue debug information in the console.'
@@ -141,7 +173,7 @@ function NZBDonkeyOptions() {
 		name: 'categories',
 		type: 'radio',
 		options: [{
-			desc: 'Do not unse categories',
+			desc: 'Do not use categories',
 			value: false
 		}, {
 			desc: 'Use default category',
@@ -215,7 +247,13 @@ function NZBDonkeyOptions() {
 		text: 'Enter the name of a subfolder within your browsers default download folder where you would like to save the NZB files.\n'
 	}, {
 		type: 'plaintext',
+		text: 'The subfolder will be created if it does not yet exist.\n'
+	}, {
+		type: 'plaintext',
 		text: 'Leave empty if you would like to save the NZB files directly in your browsers default download folder.\n'
+	}, {
+		type: 'plaintext',
+		text: 'CAUTION: Do not use an absolute path! Only enter a relative path within your browsers default download folder! Do not add leading or trailing backslashes.\n'
 	}, {
 		type: 'h3',
 		desc: 'Use category subfolders'
@@ -227,6 +265,9 @@ function NZBDonkeyOptions() {
 	}, {
 		type: 'plaintext',
 		text: 'If activated and "use default category" or "use automatic categories" is set, NZBDonkey will save the NZB file in a category subfolder within your default download subfolder.'
+	}, {
+		type: 'plaintext',
+		text: 'The category subfolder will be created if it does not yet exist.\n'
 	}, {
 		type: 'h3',
 		desc: 'Use save as dialog'
@@ -1413,92 +1454,6 @@ nzbDonkeyOptions.fields.text = function(value, save) {
 	$textbox.addEventListener('input', debouncedInput);
 	$textbox.addEventListener('change', debouncedInput);
 	return $textbox;
-};
-
-nzbDonkeyOptions.fields.color = function(value, save, option) {
-		var first = true;
-		var format = option.format || 'rgba';
-		if (!['rgb', 'rgba', 'hsl', 'hsla', 'hex'].includes(format)) {
-			throw TypeError('Unsupported format given for color field: ' + format);
-		}
-		var showAlpha = ['rgba', 'hsla'].includes(format);
-		var hsv2hsl = function(d) {
-			return [
-				Math.round(d[0] * 360),
-				Math.round(d[1] * 100) + '%',
-				Math.round(d[2] * 100) + '%'
-			];
-		};
-		var fn = {
-			rgb: CP._HSV2RGB,
-			rgba: CP._HSV2RGB,
-			hsl: hsv2hsl,
-			hsv2hsl,
-			hex: CP._HSV2HEX,
-		}[format];
-		var debouncedSave = util.debounce(500, save);
-		var onchange = function() {
-				if (first) {
-					return first = false;
-				}
-				var v = fn(picker.set());
-				var color = /^hex/.test(format) ?
-					`#${v}` :
-					`${format}(${v.join(', ')}${showAlpha ? `, ${$alpha.value}` : ''})`;
-    $field.value = color;
-    $color.style.backgroundColor = color;
-    debouncedSave(color);
-  };
-
-  function getAlpha(value) {
-    var r = /(?:rgba|hsla)\(\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*,\s*(\d?(?:\.\d+)?)\s*\)/
-      .exec(value);
-    return r && r[1] != '' ? r[1] : 1;
-  }
-
-  var $container = h('span.color');
-  $container.append(h('span.color-alpha'));
-  var $color = $container.appendChild(h('span.color-box', {
-    style: value ? `background-color: ${value};` : '',
-    onclick: function() { picker.enter(); },
-  }));
-  var $field = nzbDonkeyOptions.fields.text(value, function() {
-    if ($alpha) {
-      $alpha.value = getAlpha($field.value);
-    }
-
-    // color-picker doesn't accept alpha, so take it out.
-    var s = $field.value .split(',');
-    s = s.length >=4 ? s.slice(0, 3).join(',') + ')' : s.join(',');
-    s = s.replace('rgba', 'rgb').replace('hsla', 'hsv').replace('hsl', 'hsv');
-    picker.set(s);
-  });
-  $container.append($field);
-  var picker = new CP($field);
-  picker.on('change', onchange);
-
-  var $extraOptions = picker.picker.appendChild(h('.extra-options'));
-  if (showAlpha) {
-    var $alpha = h('input[type=range][min=0][max=1][step=.1]', {
-      'data-title': 'Alpha',
-      onchange,
-      oninput: onchange,
-      value: value != null ? getAlpha(value) : 1,
-    });
-    $extraOptions.append($alpha);
-  }
-
-  if (option.default) {
-    $extraOptions.append(h('span.color-reset', {
-      'data-title': 'Reset to default',
-      onclick: function() {
-        picker.set(option.default);
-        picker.trigger('change', [option.default]);
-      },
-      style: `background-color: ${option.default};`,
-    }));
-  }
-  return $container;
 };
 
 nzbDonkeyOptions.fields.url = function(value, save, option) {

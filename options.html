@@ -1,204 +1,217 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="css/bootstrap.css" />
     <link rel="stylesheet" href="css/options.css" />
     <link rel="stylesheet" href="css/dragula.css" />
-    <title>NZBDoneky Settings</title>
-  </head>
+    <title>NZBDonkey Settings</title>
+</head>
 <body>
 <div class="flex-container">
-	<div class="flex-item-fluid pt-3">
-		<div class="flex-sidebar">
-			<div class="row px-2">
-				<div class="col mt-0">
-					<ul class="nav flex-column text-right">
+    <div class="flex-item-fluid pt-3">
+        <div class="flex-sidebar">
+            <div class="row px-2">
+                <div class="col mt-0">
+                    <ul class="nav flex-column text-right">
                         <li class="nav-item">
                             <img class="nav-link float-right pt-0 pb-2" src="../icons/NZBDonkey_48.png" />
                         </li>
-						<li class="nav-item">
-							<a class="nav-link active" id="general-tab" href="#general">General</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" id="category-tab" href="#category">Categories</a>
-						</li>
-						<li id="menu_download" class="nav-item">
-							<a class="nav-link" id="download-tab" href="#download">Download</a>
-						</li>
-						<li id="menu_nzbget" class="nav-item">
-							<a class="nav-link" id="nzbget-tab" href="#nzbget">NZBGet</a>
-						</li>
-						<li id="menu_sabnzbd" class="nav-item">
-							<a class="nav-link" id="sabnzbd-tab" href="#sabnzbd">SABnzbd</a>
-						</li>
-						<li id="menu_synology" class="nav-item">
-							<a class="nav-link" id="synology-tab" href="#synology">Synology DS</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" id="advanced-tab" href="#advanced">Advanced</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" id="about-tab" href="#about">About</a>
-						</li>
                         <li class="nav-item">
-							&nbsp;
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" id="reset" href="#reset">Reset Settings</a>
-						</li>                        
-					</ul>
-				</div>
-			</div>
-		</div>
-
-		<div id="general" class="flex-content tabcontent">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>General Settings</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="generalContent" class="col">
-
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>				
-		</div>
-
-		<div id="category" class="flex-content tabcontent" style="display: none;">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>Categories Settings</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="categoryContent" class="col">
-					
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>				
-		</div>
-
-		<div id="download" class="flex-content tabcontent" style="display: none;">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>Download Settings</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="downloadContent" class="col">
-						
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>				
-		</div>		
-
-		<div id="nzbget" class="flex-content tabcontent" style="display: none;">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>NZBGet Settings</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="nzbgetContent" class="col">
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>				
-		</div>	
-
-		<div id="sabnzbd" class="flex-content tabcontent" style="display: none;">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>SABnzbd Settings</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="sabnzbdContent" class="col">
-					
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>				
-		</div>
-
-		<div id="synology" class="flex-content tabcontent" style="display: none;">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>Synology DownloadStation Settings</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="synologyContent" class="col">
-					
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>				
-		</div>
-
-		<div id="advanced" class="flex-content tabcontent" style="display: none;">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>Advanced Settings</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="searchenginesContent" class="col">
-
-							</div>
-						</div>
+                            <a class="nav-link active" id="general-tab" href="#general">General</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="category-tab" href="#category">Categories</a>
+                        </li>
+                        <li id="menu_download" class="nav-item">
+                            <a class="nav-link" id="download-tab" href="#download">Download</a>
+                        </li>
+                        <li id="menu_nzbget" class="nav-item">
+                            <a class="nav-link" id="nzbget-tab" href="#nzbget">NZBGet</a>
+                        </li>
+                        <li id="menu_sabnzbd" class="nav-item">
+                            <a class="nav-link" id="sabnzbd-tab" href="#sabnzbd">SABnzbd</a>
+                        </li>
+                        <li id="menu_synology" class="nav-item">
+                            <a class="nav-link" id="synology-tab" href="#synology">Synology DS</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="advanced-tab" href="#advanced">Advanced</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="about-tab" href="#about">About</a>
+                        </li>
+                        <li class="nav-item">
+                            &nbsp;
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="reset" href="#reset">Reset Settings</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div id="general" class="flex-content tabcontent">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>General Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
                         <div class="row m-0 py-0">
-							<div class="col">
+                            <div id="generalContent" class="col">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="category" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>Categories Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="categoryContent" class="col">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="download" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>Download Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="downloadContent" class="col">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="nzbget" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>NZBGet Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="nzbgetContent" class="col">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content" style="height: 80px">
+                        <div class="row m-0 py-0">
+                            <div class="col">
+                                <button id="TestButton-nzbget" class="btn btn-outline-primary">Test Connection</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="sabnzbd" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>SABnzbd Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="sabnzbdContent" class="col">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content" style="height: 80px">
+                        <div class="row m-0 py-0">
+                            <div class="col">
+                                <button id="TestButton-sabnzbd" class="btn btn-outline-primary">Test Connection</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="synology" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>Synology DownloadStation Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="synologyContent" class="col">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content" style="height: 80px">
+                        <div class="row m-0 py-0">
+                            <div class="col">
+                                <button id="TestButton-synology" class="btn btn-outline-primary">Test Connection</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="advanced" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>Advanced Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="searchenginesContent" class="col">
+                            </div>
+                        </div>
+                        <div class="row m-0 py-0">
+                            <div class="col">
                                 <strong>Active:</strong> check if you want to use this search engine<br />
                                 <strong>Search Engine Name:</strong> name of the search engine<br />
                                 <strong>Search URL:</strong> URL called for a NZB file search. Use "%s" for the search string.<br />
@@ -208,72 +221,141 @@
                                 <strong>CAUTION: these search engines settings will likely be overwritten on updates of this extension.</strong><br />
                                 Make sure to save your personal search engine settings.
                             </div>
-						</div>
-					</div>
-				</div>
-			</div>				
-		</div>	
-
-		<div id="about" class="flex-content tabcontent" style="display: none;">
-			<div class="flex-container">
-				<div class="flex-item-fixed-header border-bottom">
-					<div class="row m-0">
-						<div class="col">
-							<h3>About</h3>
-						</div>
-					</div>
-				</div>
-				<div class="flex-item-fluid">
-					<div class="flex-content">
-						<div class="row m-0 py-0">
-							<div id="aboutContent" class="col">
-								
-								<h3>NZBDonkey <small>v.<span id="NZBDonkeyVersion"></span></small></h3>
-								<h4>The ultimate NZB file downloader add-on</h4>
-								<p>
-								Copyright 2018 by Tensai<br />
-								<br />
-								Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
-								to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-								and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:<br />
-								The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.<br />
-								<br />
-								THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-								FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-								WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.<br />
-								<br />
-								<br />
-								Homepage: <a href="https://tensai75.github.io/NZBDonkey">https://tensai75.github.io/NZBDonkey</a>
-								<br />
-								GitHub page: <a href="https://github.com/Tensai75/NZBDonkey">https://github.com/Tensai75/NZBDonkey</a>
-								<br />
-								<br />
-								Please open a GitHub issue for support questions.
-								</p>
-						
-							</div>
-						</div>
-				
-					</div>
-				</div>
-			</div>				
-		</div>	
-
-	</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="about" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>About</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="aboutContent" class="col">
+                                <h3>NZBDonkey <small>v.<span id="NZBDonkeyVersion"></span></small></h3>
+                                <h4>The ultimate NZB file downloader add-on</h4>
+                                <p>
+                                    Copyright 2018 by Tensai<br />
+                                    <br />
+                                    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+                                    to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+                                    and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:<br />
+                                    The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.<br />
+                                    <br />
+                                    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+                                    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+                                    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.<br />
+                                    <br />
+                                    <br />
+                                    Homepage: <a href="https://tensai75.github.io/NZBDonkey">https://tensai75.github.io/NZBDonkey</a>
+                                    <br />
+                                    GitHub page: <a href="https://github.com/Tensai75/NZBDonkey">https://github.com/Tensai75/NZBDonkey</a>
+                                    <br />
+                                    <br />
+                                    Please open a GitHub issue for support questions.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="flex-item-fixed-bottom">
         <div class="save-container row mx-3">
-          <div class="alert alert-success auto col-12 p-1 m-0 text-center">Saved!</div>
-          <button disabled>Save</button>
+            <div class="alert alert-success auto col-12 p-1 m-0 text-center">Saved!</div>
+            <button disabled>Save</button>
+        </div>
+    </div>
+    <div class="modal fade" id="TestSuccess" tabindex="-1" role="dialog" aria-labelledby="TestSuccess" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="alert alert-success modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Success</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="TestSuccessBody" class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="TestWarning" tabindex="-1" role="dialog" aria-labelledby="TestSuccess" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="alert alert-danger modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Error</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="TestWarningBody" class="modal-body">
+                    ...
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="AdvancedWarning" tabindex="-1" role="dialog" aria-labelledby="TestSuccess" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="alert alert-warning modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">CAUTION</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="AdvancedWarningBody" class="modal-body">
+                    These settings are for advanced users only!<br />
+                    Are you sure you want to proceed to the advanced settings?
+                </div>
+                <div class="modal-footer">
+                    <button id="AdvancedWarningConfirmed" type="button" class="btn btn-outline-secondary">Show Advanced Settings</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="ResetWarning" tabindex="-1" role="dialog" aria-labelledby="TestSuccess" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="alert alert-warning modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">CAUTION</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="ResetWarningBody" class="modal-body">
+                    Are you sure you want to reset all settings to the default value?
+                </div>
+                <div class="modal-footer">
+                    <button id="ResetWarningConfirmed" type="button" class="btn btn-outline-secondary">Reset Settings</button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
 <!-- JavaScript -->
 <script src="js/jquery-3.3.1.js"></script>
+<script src="js/bootstrap.js"></script>
 <script src="js/dragula.js"></script>
 <script src="js/dom.js"></script>
 <script src="js/util.js"></script>
 <script src="js/options.js"></script>
-
 </body>
 </html>
