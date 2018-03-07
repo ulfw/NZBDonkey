@@ -811,23 +811,30 @@ nzbDonkey.processNZBfile = function(nzb) {
 
         // add the meta data to the nzb file
         var nzbMetadata = '';
-        if (!nzb.title.match(/[&"\'<>]/)) {
-            nzbMetadata += '\t<meta type="title">' + nzb.title + '</meta>\n';
-            nzbDonkey.logging("nzb file meta data: title tag set to: " + nzb.title);
-        } else {
-            nzbDonkey.logging("nzb file meta data: could not set title tag due to invalid characters");
+        if (typeof nzb.title !== 'undefined') {
+            if (!nzb.title.match(/[&"\'<>]/)) {
+                nzbMetadata += '\t<meta type="title">' + nzb.title + '</meta>\n';
+                nzbDonkey.logging("nzb file meta data: title tag set to: " + nzb.title);
+            } else {
+                nzbDonkey.logging("nzb file meta data: could not set title tag due to invalid characters");
+            }
         }
-        if (nzb.password != '' && !nzb.password.match(/[&"\'<>]/)) {
-            nzbMetadata += '\t<meta type="password">' + nzb.password + '</meta>\n';
-            nzbDonkey.logging("nzb file meta data: password tag set to: " + nzb.password);
-        } else {
-            nzbDonkey.logging("nzb file meta data: could not set password tag due to invalid characters");
+        if (typeof nzb.password !== 'undefined') {
+            if (!nzb.password.match(/[&"\'<>]/)) {
+                nzbMetadata += '\t<meta type="password">' + nzb.password + '</meta>\n';
+                nzbDonkey.logging("nzb file meta data: password tag set to: " + nzb.password);
+            
+            } else {
+                nzbDonkey.logging("nzb file meta data: could not set password tag due to invalid characters");
+            }
         }
-        if (nzb.category != '' && !nzb.category.match(/[&"\'<>]/)) {
-            nzbMetadata += '\t<meta type="category">' + nzb.category + '</meta>\n';
-            nzbDonkey.logging("nzb file meta data: category tag set to: " + nzb.category);
-        } else {
-            nzbDonkey.logging("nzb file meta data: could not set category tag due to invalid characters");
+        if (typeof nzb.category !== 'undefined') {
+            if (!nzb.category.match(/[&"\'<>]/)) {
+                nzbMetadata += '\t<meta type="category">' + nzb.category + '</meta>\n';
+                nzbDonkey.logging("nzb file meta data: category tag set to: " + nzb.category);
+            } else {
+                nzbDonkey.logging("nzb file meta data: could not set category tag due to invalid characters");
+            }
         }
         nzbDonkey.logging("adding the meta data to the nzb file");
         if (nzb.file.match(/<head>/i)) {

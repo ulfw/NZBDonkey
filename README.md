@@ -20,6 +20,9 @@ Currently in beta testing.
 A more detailed description will be added soon.
 
 ## Change log
+### v0.3.1
+* Bug fix for: "nzb.password.match is undefined" bug in processNZBfile routine.
+
 ### v0.3.0
 * Options page: added a test button on the NZBGet, SABnzbd and Synology DownloadStation settings to test the connection with the server.
 * Options page: changed all alerts to modal pop-ups.
