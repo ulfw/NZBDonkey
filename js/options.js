@@ -143,6 +143,75 @@ function NZBDonkeyOptions() {
 			text: 'If activated, NZBDonkey will catch and handle left mouse clicks on a NZBlnk link.'
 		}, {
 			type: 'h3',
+			desc: 'Check NZB files for completness'
+		}, {
+			name: 'checkNZBfiles',
+			type: 'checkbox',
+			desc: 'Activate check for completeness',
+			default: true
+		}, {
+			type: 'plaintext',
+			text: 'If activated, NZB files will be checked for completeness and only be download if they seem to be complete.'
+		}, {
+			type: 'h3',
+			desc: 'Threshold for allowed missing files'
+		}, {
+			type: 'select',
+			name: 'fileThreshold',
+			options: [{
+				desc: '0',
+				value: 0
+			}, {
+				desc: '1',
+				value: 1
+			}, {
+				desc: '2',
+				value: 2
+			}, {
+				desc: '3',
+				value: 3
+			}, {
+				desc: '4',
+				value: 4
+			}, {
+				desc: '5',
+				value: 5
+			}],
+            default: 2
+		}, {
+			type: 'plaintext',
+			text: 'If check for completeness is activated, NZB files with missing files above this threshold will be rejected.'
+		}, {
+			type: 'h3',
+			desc: 'Threshold for allowed missing segments'
+		}, {
+			type: 'select',
+			name: 'segmentThreshold',
+			options: [{
+				desc: '0 %',
+				value: 0
+			}, {
+				desc: '1 %',
+				value: 0.01
+			}, {
+				desc: '2 %',
+				value: 0.02
+			}, {
+				desc: '3 %',
+				value: 0.03
+			}, {
+				desc: '4 %',
+				value: 0.04
+			}, {
+				desc: '5 %',
+				value: 0.05
+			}],
+            default: 0.02
+		}, {
+			type: 'plaintext',
+			text: 'If check for completeness is activated, NZB files with missing segments above this threshold will be rejected.'
+		}, {
+			type: 'h3',
 			desc: 'Show success notifications'
 		}, {
 			name: 'showNotifications',

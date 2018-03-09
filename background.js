@@ -492,7 +492,6 @@ nzbDonkey.testconnection.sabnzbd = function(nzb) {
 
 }
 
-
 // function to push the nzb file to SABnzbd
 nzbDonkey.execute.sabnzbd = function(nzb) {
 
@@ -805,22 +804,6 @@ nzbDonkey.categorize = function(nzb) {
 // function to check the nzb file
 nzbDonkey.checkNZBfile = function(nzb) {
 
-    // Threshold value for missing files or segments for rejection
-    var fileThreshold = 2; // 2 files
-    var segmentThreshold = 0.02; // 2 % of the segments
-
-    // RegExp for the expected amounts of files, expected amount of files is in capturing group 2
-    var reExpectedFiles = new RegExp('.*?[(\\[](\\d{1,4})\\/(\\d{1,4})[)\\]].*?\\((\\d{1,4})\\/(\\d{1,5})\\)', "i");
-
-    // RegExp for the expected segments per file, expected amount of segments is in capturing group 2
-    var reExpectedSegments = new RegExp('.*\\((\\d{1,4})\\/(\\d{1,5})\\)', "i");
-
-    var totalFiles = 0;
-    var expectedFiles = 0;
-
-    var totalSegments = 0;
-    var expectedSegments = 0;
-
     return new Promise(function(resolve, reject) {
 
         // convert the nzb file from XML into JSON for simpler handling
@@ -829,79 +812,101 @@ nzbDonkey.checkNZBfile = function(nzb) {
 
         // check if it is actually a nzb file and does contain files
         if (typeof nzbFile.nzb[0].file == "object") {
+            
+            // if set in the settings, check for completeness
+            if (nzbDonkeySettings.general.checkNZBfiles) {
+                
+                // Threshold value for missing files or segments for rejection
+                var fileThreshold = nzbDonkeySettings.general.fileThreshold;
+                var segmentThreshold = nzbDonkeySettings.general.segmentThreshold;
 
-            // get the amount of files
-            totalFiles = nzbFile.nzb[0].file.length;
+                // RegExp for the expected amounts of files, expected amount of files is in capturing group 2
+                var reExpectedFiles = new RegExp('.*?[(\\[](\\d{1,4})\\/(\\d{1,4})[)\\]].*?\\((\\d{1,4})\\/(\\d{1,5})\\)', "i");
 
-            // loop through the files
-            for (file of nzbFile.nzb[0].file) {
-                // check if the file subject contains the expected amount of files
-                // if not, the expectedFiles counter will remain 0
-                if (typeof file._attr.subject._value != "undefined") {
-                    if (reExpectedFiles.test(file._attr.subject._value)) {
-                        // check if the found expected amount of files is bigger than an already found one
-                        // like this the highest number will be used e.g. in cases when an uploader subsequently has added more files
-                        if (Number(file._attr.subject._value.match(reExpectedFiles)[2]) > expectedFiles) {
-                            // if yes, set expectedFiles to the found value
-                            expectedFiles = Number(file._attr.subject._value.match(reExpectedFiles)[2]);
+                // RegExp for the expected segments per file, expected amount of segments is in capturing group 2
+                var reExpectedSegments = new RegExp('.*\\((\\d{1,4})\\/(\\d{1,5})\\)', "i");
+
+                var totalFiles = 0;
+                var expectedFiles = 0;
+
+                var totalSegments = 0;
+                var expectedSegments = 0;
+
+                // get the amount of files
+                totalFiles = nzbFile.nzb[0].file.length;
+
+                // loop through the files
+                for (file of nzbFile.nzb[0].file) {
+                    // check if the file subject contains the expected amount of files
+                    // if not, the expectedFiles counter will remain 0
+                    if (typeof file._attr.subject._value != "undefined") {
+                        if (reExpectedFiles.test(file._attr.subject._value)) {
+                            // check if the found expected amount of files is bigger than an already found one
+                            // like this the highest number will be used e.g. in cases when an uploader subsequently has added more files
+                            if (Number(file._attr.subject._value.match(reExpectedFiles)[2]) > expectedFiles) {
+                                // if yes, set expectedFiles to the found value
+                                expectedFiles = Number(file._attr.subject._value.match(reExpectedFiles)[2]);
+                            }
                         }
-                    }
 
-                    var expectedSegmentsPerFile = 0; 
+                        var expectedSegmentsPerFile = 0; 
 
-                    // check if the file subject contains the expected amount of segments for this file
-                    if (reExpectedSegments.test(file._attr.subject._value)) {
-                        // if yes, set the value
-                        expectedSegmentsPerFile = Number(file._attr.subject._value.match(reExpectedSegments)[2]);
-                    }
-                    else {
-                        // if not, we loop through the segments and get the highest number from the number attribute
-                        // this is not very accurate but still in some cases might give an indication for missing segments
-                        if (file.segments[0].segment == "object") {
-                            for (segment of file.segments[0].segment) {
-                                if (typeof segment._attr.number._value != "undefined") {
-                                    if (Number(segment._attr.number._value) > expectedSegmentsPerFile) {
-                                        expectedSegmentsPerFile = Number(segment._attr.number._value);
+                        // check if the file subject contains the expected amount of segments for this file
+                        if (reExpectedSegments.test(file._attr.subject._value)) {
+                            // if yes, set the value
+                            expectedSegmentsPerFile = Number(file._attr.subject._value.match(reExpectedSegments)[2]);
+                        }
+                        else {
+                            // if not, we loop through the segments and get the highest number from the number attribute
+                            // this is not very accurate but still in some cases might give an indication for missing segments
+                            if (file.segments[0].segment == "object") {
+                                for (segment of file.segments[0].segment) {
+                                    if (typeof segment._attr.number._value != "undefined") {
+                                        if (Number(segment._attr.number._value) > expectedSegmentsPerFile) {
+                                            expectedSegmentsPerFile = Number(segment._attr.number._value);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
+                    // add the segments of this file to the total amount of segments
+                    if (typeof file.segments[0].segment != "undefined") {
+                        totalSegments += file.segments[0].segment.length;
+                    }
+
+                    // add the expected segments for this file to the total amount of expected segments
+                    expectedSegments += expectedSegmentsPerFile;
+
+                }
+                // check if we have enough files and segments 
+                if ( (expectedFiles - totalFiles <=  fileThreshold) && (totalSegments >= expectedSegments * (1 - segmentThreshold)) ) {
+                    // if yes, the nzb file is most probably complete -> resolve
+                    var result = {
+                        "expectedFiles": expectedFiles,
+                        "totalFiles": totalFiles,
+                        "expectedSegments": expectedSegments,
+                        "totalSegments": totalSegments
+                    };
+                    resolve(result);
+                }
+                // if not, the nzb file is obviously incomplete -> reject
+                else {
+                    if (expectedFiles - totalFiles > fileThreshold) {
+                        var missingFiles = expectedFiles - totalFiles;
+                        reject(new Error("the nzb file is incomplete with" + " " + missingFiles + " " + "missing files"));
+                    }
+                    else if (totalSegments < expectedSegments * (1 - segmentsThreshold)) {
+                        var missingSegments = expectedSegments - totalSegments;
+                        var missingSegmentsPercent = Math.round((missingSegments / expectedSegments * 100)*100)/100;
+                        reject(new Error("the nzb file is incomplete with" + " " + missingSegments + " (" + missingSegmentsPercent + "%) " + "missing segments"));
+                    }
+                    reject(new Error("the nzb file is incomplete"));
                 }
 
-                // add the segments of this file to the total amount of segments
-                if (typeof file.segments[0].segment != "undefined") {
-                    totalSegments += file.segments[0].segment.length;
-                }
+            }
 
-                // add the expected segments for this file to the total amount of expected segments
-                expectedSegments += expectedSegmentsPerFile;
-
-            }
-            // check if we have enough files and segments 
-            if ( (expectedFiles - totalFiles <  fileThreshold) && (totalSegments >= expectedSegments * (1 - segmentThreshold)) ) {
-                // if yes, the nzb file is most probably complete -> resolve
-                var result = {
-                    "expectedFiles": expectedFiles,
-                    "totalFiles": totalFiles,
-                    "expectedSegments": expectedSegments,
-                    "totalSegments": totalSegments
-                };
-                resolve(result);
-            }
-            // if not, the nzb file is obviously incomplete -> reject
-            else {
-                if (expectedFiles - totalFiles > fileThreshold) {
-                    var missingFiles = expectedFiles - totalFiles;
-                    reject(new Error("the nzb file is incomplete with" + " " + missingFiles + " " + "missing files"));
-                }
-                else if (totalSegments < expectedSegments * (1 - segmentsThreshold)) {
-                    var missingSegments = expectedSegments - totalSegments;
-                    var missingSegmentsPercent = Math.round((missingSegments / expectedSegments * 100)*100)/100;
-                    reject(new Error("the nzb file is incomplete with" + " " + missingSegments + " (" + missingSegmentsPercent + "%) " + "missing segments"));
-                }
-                reject(new Error("the nzb file is incomplete"));
-            }
         }
         // if it is not a nzb file, reject
         else {
