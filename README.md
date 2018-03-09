@@ -1,3 +1,8 @@
+---
+title: Home
+permalink: README.md
+---
+
 # NZBDonkey
 
 ### The ultimate NZB file downloader extension for Chrome and Firefox
