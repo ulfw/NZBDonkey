@@ -117,7 +117,7 @@ function NZBDonkeyOptions() {
 			name: 'processTitel',
 			type: 'radio',
 			options: [{
-				desc: 'Leave the as they are',
+				desc: 'Leave them as they are',
 				value: false
 			}, {
 				desc: 'Convert all spaces to periods',
