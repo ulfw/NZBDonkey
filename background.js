@@ -291,16 +291,16 @@ nzbDonkey.searchNZB = function(nzb) {
                             "timeout": 180000
                         };
                         nzbDonkey.xhr(options).then(function(response) {
-                            // if we have a response, check if it is a nzb file
-                            if (response.match(/<nzb.*>/i)) {
-                                // if it is a nzb file, resolve with the nzb file
-                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "the downloaded file is a valid nzb file");
+                            // if we have a response, check if it is a nzb file and if it is complete
+                            nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "checking if nzb file is valid and complete");
+                            nzbDonkey.checkNZBfile(response).then(function(result) {
+                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "the nzb file seems to be complete");
+                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "files: [" + result.totalFiles + "/" + result.expectedFiles + "] / segments: (" + result.totalSegments + "/" + result.expectedSegments + ")" );
                                 resolve(response);
-                            } else {
-                                // if it is not a nzb file, reject
-                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "the downloaded file is not a valid nzb file", true);
-                                reject(new Error(nzbDonkeySettings.searchengines[i].name + ": " + "the downloaded file is not a valid nzb file"));
-                            }
+                            }).catch(function(e){
+                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + e.toString(), true);
+                                reject(e);
+                            });
                         }).catch(function(e) {
                             // if the download failed, reject
                             nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "an error occurred while trying to download the nzb file", true);
@@ -802,6 +802,116 @@ nzbDonkey.categorize = function(nzb) {
 
 }
 
+// function to check the nzb file
+nzbDonkey.checkNZBfile = function(nzb) {
+
+    // Threshold value for missing files or segments for rejection
+    var fileThreshold = 2; // 2 files
+    var segmentThreshold = 0.02; // 2 % of the segments
+
+    // RegExp for the expected amounts of files, expected amount of files is in capturing group 2
+    var reExpectedFiles = new RegExp('.*?[(\\[](\\d{1,4})\\/(\\d{1,4})[)\\]].*?\\((\\d{1,4})\\/(\\d{1,5})\\)', "i");
+
+    // RegExp for the expected segments per file, expected amount of segments is in capturing group 2
+    var reExpectedSegments = new RegExp('.*\\((\\d{1,4})\\/(\\d{1,5})\\)', "i");
+
+    var totalFiles = 0;
+    var expectedFiles = 0;
+
+    var totalSegments = 0;
+    var expectedSegments = 0;
+
+    return new Promise(function(resolve, reject) {
+
+        // convert the nzb file from XML into JSON for simpler handling
+        // xmlToJSON from https://github.com/metatribal/xmlToJSON
+        var nzbFile = xmlToJSON.parseString(nzb);
+
+        // check if it is actually a nzb file and does contain files
+        if (typeof nzbFile.nzb[0].file == "object") {
+
+            // get the amount of files
+            totalFiles = nzbFile.nzb[0].file.length;
+
+            // loop through the files
+            for (file of nzbFile.nzb[0].file) {
+                // check if the file subject contains the expected amount of files
+                // if not, the expectedFiles counter will remain 0
+                if (typeof file._attr.subject._value != "undefined") {
+                    if (reExpectedFiles.test(file._attr.subject._value)) {
+                        // check if the found expected amount of files is bigger than an already found one
+                        // like this the highest number will be used e.g. in cases when an uploader subsequently has added more files
+                        if (Number(file._attr.subject._value.match(reExpectedFiles)[2]) > expectedFiles) {
+                            // if yes, set expectedFiles to the found value
+                            expectedFiles = Number(file._attr.subject._value.match(reExpectedFiles)[2]);
+                        }
+                    }
+
+                    var expectedSegmentsPerFile = 0; 
+
+                    // check if the file subject contains the expected amount of segments for this file
+                    if (reExpectedSegments.test(file._attr.subject._value)) {
+                        // if yes, set the value
+                        expectedSegmentsPerFile = Number(file._attr.subject._value.match(reExpectedSegments)[2]);
+                    }
+                    else {
+                        // if not, we loop through the segments and get the highest number from the number attribute
+                        // this is not very accurate but still in some cases might give an indication for missing segments
+                        if (file.segments[0].segment == "object") {
+                            for (segment of file.segments[0].segment) {
+                                if (typeof segment._attr.number._value != "undefined") {
+                                    if (Number(segment._attr.number._value) > expectedSegmentsPerFile) {
+                                        expectedSegmentsPerFile = Number(segment._attr.number._value);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // add the segments of this file to the total amount of segments
+                if (typeof file.segments[0].segment != "undefined") {
+                    totalSegments += file.segments[0].segment.length;
+                }
+
+                // add the expected segments for this file to the total amount of expected segments
+                expectedSegments += expectedSegmentsPerFile;
+
+            }
+            // check if we have enough files and segments 
+            if ( (expectedFiles - totalFiles <  fileThreshold) && (totalSegments >= expectedSegments * (1 - segmentThreshold)) ) {
+                // if yes, the nzb file is most probably complete -> resolve
+                var result = {
+                    "expectedFiles": expectedFiles,
+                    "totalFiles": totalFiles,
+                    "expectedSegments": expectedSegments,
+                    "totalSegments": totalSegments
+                };
+                resolve(result);
+            }
+            // if not, the nzb file is obviously incomplete -> reject
+            else {
+                if (expectedFiles - totalFiles > fileThreshold) {
+                    var missingFiles = expectedFiles - totalFiles;
+                    reject(new Error("the nzb file is incomplete with" + " " + missingFiles + " " + "missing files"));
+                }
+                else if (totalSegments < expectedSegments * (1 - segmentsThreshold)) {
+                    var missingSegments = expectedSegments - totalSegments;
+                    var missingSegmentsPercent = Math.round((missingSegments / expectedSegments * 100)*100)/100;
+                    reject(new Error("the nzb file is incomplete with" + " " + missingSegments + " (" + missingSegmentsPercent + "%) " + "missing segments"));
+                }
+                reject(new Error("the nzb file is incomplete"));
+            }
+        }
+        // if it is not a nzb file, reject
+        else {
+            reject(new Error("this is not a valid nzb file"));
+        }
+
+    });
+
+}
+
 // function to process the nzb file
 nzbDonkey.processNZBfile = function(nzb) {
 
@@ -823,7 +933,6 @@ nzbDonkey.processNZBfile = function(nzb) {
             if (!nzb.password.match(/[&"\'<>]/)) {
                 nzbMetadata += '\t<meta type="password">' + nzb.password + '</meta>\n';
                 nzbDonkey.logging("nzb file meta data: password tag set to: " + nzb.password);
-            
             } else {
                 nzbDonkey.logging("nzb file meta data: could not set password tag due to invalid characters");
             }
