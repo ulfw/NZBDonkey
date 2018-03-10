@@ -108,9 +108,7 @@ function NZBDonkeyOptions() {
 		}, {
 			type: 'plaintext',
 			text: 'Choose what NZBDonkey shall do with the NZB file if found. You will need to the set the further settings in the corresponding tab.'
-		},
-
-		{
+		}, {
 			type: 'h3',
 			desc: 'How to handle spaces/periods in the title/filename'
 		}, {
@@ -212,15 +210,15 @@ function NZBDonkeyOptions() {
 			text: 'If check for completeness is activated, NZB files with missing segments above this threshold will be rejected.'
 		}, {
 			type: 'h3',
-			desc: 'Show success notifications'
+			desc: 'Show notifications'
 		}, {
 			name: 'showNotifications',
 			type: 'checkbox',
-			desc: 'Show sucess notifications',
+			desc: 'Show notifications',
 			default: true
 		}, {
 			type: 'plaintext',
-			text: 'Deactivate if you do not want to be notified upon success. Error notifications will always be shown.'
+			text: 'Deactivate if you do not want to be notified with notifications e.g. upon start of the program or success of the script. Error notifications will always be shown.'
 		}, {
 			type: 'h3',
 			desc: 'Debug Mode'

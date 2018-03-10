@@ -28,6 +28,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         // if the context menu was clicked on a link
         if (info.menuItemId == "NZBDonkey_openLink") {
             nzbDonkey.logging("NZBDonkey was started with a right click on a link");
+            nzbDonkey.notification("Starting to search for the nzb file", "info");
             nzbDonkey.processLink(info.linkUrl).then(function(response) {
                 return nzbDonkey.searchNZB(response);
             }).then(function(response) {
@@ -39,9 +40,9 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
             }).then(function(response) {
                 return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
             }).then(function(response) {
-                nzbDonkey.notification(response);
+                nzbDonkey.notification(response, "success");
             }).catch(function(e) {
-                nzbDonkey.notification(e.toString(), true);
+                nzbDonkey.notification(e.toString(), "error");
                 console.error(e);
             });
         }
@@ -54,6 +55,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
             }, function(nzb) {
                 if (!nzb.cancle) {
                     nzbDonkey.logging("analysis of selection finished");
+                    nzbDonkey.notification("Starting to search for the nzb file", "info");
                     nzbDonkey.processAnalysedSelection(nzb).then(function(response) {
                         return nzbDonkey.searchNZB(response);
                     }).then(function(response) {
@@ -65,9 +67,9 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                     }).then(function(response) {
                         return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
                     }).then(function(response) {
-                        nzbDonkey.notification(response);
+                        nzbDonkey.notification(response, "success");
                     }).catch(function(e) {
-                        nzbDonkey.notification(e.toString(), true);
+                        nzbDonkey.notification(e.toString(), "error");
                         console.error(e);
                     });
                 } else {
@@ -80,7 +82,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         console.error("NZBDonkey - " + e.toString());
         chrome.notifications.create("NZBDonkey_notification", {
             type: 'basic',
-            iconUrl: "icons/NZBDonkey_128.png",
+            iconUrl: "icons/NZBDonkey_error_128.png",
             title: 'NZBDonkey',
             message: "Error: could not load settings"
         });
@@ -114,6 +116,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             });
         } else if (request.nzbDonkeyNZBLinkURL) {
             nzbDonkey.logging("NZBDonkey was started with a left click on an actual NZBlnk link");
+            nzbDonkey.notification("Starting to search for the nzb file", "info");
             nzbDonkey.processLink(request.nzbDonkeyNZBLinkURL).then(function(response) {
                 return nzbDonkey.searchNZB(response);
             }).then(function(response) {
@@ -125,9 +128,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             }).then(function(response) {
                 return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
             }).then(function(response) {
-                nzbDonkey.notification(response);
+                nzbDonkey.notification(response, "success");
             }).catch(function(e) {
-                nzbDonkey.notification(e.toString(), true);
+                nzbDonkey.notification(e.toString(), "error");
                 console.error(e);
             });
         }
@@ -136,7 +139,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.error("NZBDonkey - " + e.toString());
         chrome.notifications.create("NZBDonkey_notification", {
             type: 'basic',
-            iconUrl: "icons/NZBDonkey_128.png",
+            iconUrl: "icons/NZBDonkey_error_128.png",
             title: 'NZBDonkey',
             message: "Error: could not load settings"
         });
@@ -974,12 +977,17 @@ nzbDonkey.logging = function(loggingText, isError = false) {
 }
 
 // function to show the desktop notification
-nzbDonkey.notification = function(message, isError) {
-    if (nzbDonkeySettings.general.showNotifications || isError) {
+nzbDonkey.notification = function(message, type = "info") {
+    if (nzbDonkeySettings.general.showNotifications || type == "error") {
+        var iconURL = {
+            "info": "icons/NZBDonkey_128.png",
+            "error": "icons/NZBDonkey_error_128.png",
+            "success": "icons/NZBDonkey_success_128.png"
+        };
         nzbDonkey.logging("sending desktop notification");
         chrome.notifications.create("NZBDonkey_notification", {
             type: 'basic',
-            iconUrl: "icons/NZBDonkey_128.png",
+            iconUrl: iconURL[type],
             title: 'NZBDonkey',
             message: message
         });
