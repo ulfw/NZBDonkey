@@ -31,17 +31,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                     nzbDonkey.logging("analysis of selection finished");
                     nzbDonkey.notification("Starting to search for the nzb file", "info");
                     nzbDonkey.processAnalysedSelection(nzb).then(function(response) {
-                        return nzbDonkey.searchNZB(response);
-                    }).then(function(response) {
-                        return nzbDonkey.processTitle(response);
-                    }).then(function(response) {
-                        return nzbDonkey.categorize(response);
-                    }).then(function(response) {
-                        return nzbDonkey.processNZBfile(response);
-                    }).then(function(response) {
-                        return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
-                    }).then(function(response) {
-                        nzbDonkey.notification(response, "success");
+                        nzbDonkey.doTheDonkey(response);
                     }).catch(function(e) {
                         nzbDonkey.notification(e.toString(), "error");
                         console.error(e);
@@ -56,17 +46,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
             nzbDonkey.logging("NZBDonkey was started with a right click on a link");
             nzbDonkey.notification("Starting to search for the nzb file", "info");
             nzbDonkey.processLink(info.linkUrl).then(function(response) {
-                return nzbDonkey.searchNZB(response);
-            }).then(function(response) {
-                return nzbDonkey.processTitle(response);
-            }).then(function(response) {
-                return nzbDonkey.categorize(response);
-            }).then(function(response) {
-                return nzbDonkey.processNZBfile(response);
-            }).then(function(response) {
-                return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
-            }).then(function(response) {
-                nzbDonkey.notification(response, "success");
+                nzbDonkey.doTheDonkey(response);
             }).catch(function(e) {
                 nzbDonkey.notification(e.toString(), "error");
                 console.error(e);
