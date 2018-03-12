@@ -398,7 +398,7 @@ function NZBDonkeyOptions() {
 		default: 'http'
 	}, {
 		type: 'plaintext',
-		text: 'Choose whether to connect to your server via normal http or secure https connection.'
+		text: 'Choose whether to connect to your server via normal http or secure https connections.'
 	}, {
 		type: 'h3',
 		desc: 'NZBGet username'
@@ -411,7 +411,7 @@ function NZBDonkeyOptions() {
 		text: 'Enter the username to access the NZBGet server.\n'
 	}, {
 		type: 'plaintext',
-		text: 'You can use either the ControlUser, the RestricetUser or the AddUser as set on the security settings page of your NZBGet server.\n'
+		text: 'You can use either the ControlUser, the RestrictedUser or the AddUser as set on the security settings page of your NZBGet server.\n'
 	}, {
 		type: 'plaintext',
 		text: 'It is however recommended to set a username and password for the AddUser on the security settings page of your NZBGet server and to use this user.'
@@ -435,7 +435,7 @@ function NZBDonkeyOptions() {
 		default: false
 	}, {
 		type: 'plaintext',
-		text: 'If checked, the NZB file will be added to NZBGet in pause mode.\nYou will have to unpause it manualy in the NZBGet web gui to start the download.'
+		text: 'If checked, the NZB file will be added to NZBGet in pause mode.\nYou will have to unpause it manually in the NZBGet web gui to start the download.'
 	}, ]);
 
 	nzbDonkeyOptions.addTab('sabnzbd', [{
@@ -457,7 +457,7 @@ function NZBDonkeyOptions() {
 		default: '8080'
 	}, {
 		type: 'plaintext',
-		text: 'Enter the port number to be used to connect to your SABnzbd server. Usually this is 8080 for http connection.'
+		text: 'Enter the port number to be used to connect to your SABnzbd server. Usually this is 8080 for http connections.'
 	}, {
 		type: 'h3',
 		desc: 'Connection scheme'
@@ -474,7 +474,7 @@ function NZBDonkeyOptions() {
 		default: 'http'
 	}, {
 		type: 'plaintext',
-		text: 'Choose whether to connect to your server via normal http or secure https connection.\n'
+		text: 'Choose whether to connect to your server via normal http or secure https connections.\n'
 	}, {
 		type: 'plaintext',
 		text: 'To connect via https, SABnzbd needs to be configured for https connections and the port above to be set accordingly.'
@@ -501,7 +501,7 @@ function NZBDonkeyOptions() {
 		default: false
 	}, {
 		type: 'plaintext',
-		text: 'If checked, the NZB file will be added to SABnzbd in pause mode.\nYou will have to unpause it manualy in the SABnzbd web gui to start the download.'
+		text: 'If checked, the NZB file will be added to SABnzbd in pause mode.\nYou will have to unpause it manually in the SABnzbd web gui to start the download.'
 	}]);
 
 	nzbDonkeyOptions.addTab('synology', [{
@@ -540,7 +540,7 @@ function NZBDonkeyOptions() {
 		default: 'http'
 	}, {
 		type: 'plaintext',
-		text: 'Choose whether to connect to your Synology Diskstation via normal http or secure https connection.'
+		text: 'Choose whether to connect to your Synology Diskstation via normal http or secure https connections.'
 	}, {
 		type: 'h3',
 		desc: 'Username'
