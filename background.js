@@ -697,7 +697,9 @@ nzbDonkey.execute.download = function(nzb) {
             filename += nzbDonkeySettings.download.defaultPath.replace(/^[\/]*(.*)[\/]*$/, '$1') + "/";
         }
         if (nzb.category != "" && nzbDonkeySettings.download.categoryFolder) {
-            filename += nzb.category.match(/^[\/]*(.*)[\/]*$/)[1] + "/";
+            // sanitize category
+            var category = nzb.category.replace(/[/\\?%*:|"<>\r\n\t\0\v\f\u200B]/g, "");
+            filename += category + "/";
         }
         filename += nzb.title;
         if (nzb.password != "") {
@@ -718,14 +720,18 @@ nzbDonkey.execute.download = function(nzb) {
             filename: filename,
             saveAs: nzbDonkeySettings.download.saveAs,
             conflictAction: "uniquify"
-        });
-        chrome.downloads.onCreated.addListener(function(item) {
-            nzbDonkey.logging("starting the actual download");
-            var notificationString = "Downloading nzb file" + ":\n" + filename;
-            if (passwordWarning) {
-                notificationString += notificationString + '\n' + passwordWarning;
+        }, function(id) {
+            if (typeof id == "undefined") {
+                reject(new Error(chrome.runtime.lastError.message));
             }
-            resolve(notificationString);
+            else {
+                nzbDonkey.logging("starting the actual download");
+                var notificationString = "Downloading nzb file" + ":\n" + filename;
+                if (passwordWarning) {
+                    notificationString += notificationString + '\n' + passwordWarning;
+                }
+                resolve(notificationString);
+            }
         });
 
     });
@@ -740,7 +746,7 @@ nzbDonkey.processTitle = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         // sanitize title
-        nzb.title = nzb.title.replace(/[/\\?%*:|"<>]/g, "")
+        nzb.title = nzb.title.replace(/[/\\?%*:|"<>\r\n\t\0\v\f\u200B]/g, "");
 
         // convert periods to spaces or vice versa
         switch (nzbDonkeySettings.general.processTitel) {
