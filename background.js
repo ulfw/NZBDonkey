@@ -117,8 +117,15 @@ nzbDonkey.loadSettings = function() {
     console.info("NZBDonkey - INFO: trying to load the settings");
 
     return new Promise(function(resolve, reject) {
- 
-        chrome.storage.sync.get(null, function(obj) {
+
+        // Fall back to storage.local if storage.sync is not available
+        if (chrome.storage.sync) {
+            var storage = chrome.storage.sync;
+        }
+        else {
+            var storage = chrome.storage.local;
+        }
+        storage.get(null, function(obj) {
             for (key in obj) {
                 keys = key.split(".");
                 if (keys[0] == 'searchengines') {

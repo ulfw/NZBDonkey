@@ -1,3 +1,11 @@
+// Fall back to storage.local if storage.sync is not available
+if (chrome.storage.sync) {
+    var storage = chrome.storage.sync;
+}
+else {
+    var storage = chrome.storage.local;
+}
+
 $(document).ready(function() {
 
 	$("[id^=menu_]").each(function(index) {
@@ -37,7 +45,7 @@ $(document).ready(function() {
                 $("#ResetWarningConfirmed").click(function() {
                     $(this).off();
                     $("#ResetWarning").modal("hide");
-                    chrome.storage.sync.clear();
+                    storage.clear();
                     window.location.reload();
                 });
                 break;
@@ -685,7 +693,7 @@ function NZBDonkeyOptions() {
 	var $saveContainer = document.querySelector('.save-container');
 	var $saveButton = $saveContainer.querySelector('button');
 	$saveButton.addEventListener('click', function() {
-		chrome.storage.sync.set(changedValues);
+		storage.set(changedValues);
 		$saveButton.setAttribute('disabled', true);
 	});
 	var showSavedAlert = flashClass($saveContainer, 'show', 2000);
@@ -741,7 +749,7 @@ function NZBDonkeyOptions() {
 			});
 		})(options);
 
-		chrome.storage.sync.get(keys, function(items) {
+		storage.get(keys, function(items) {
 			addTabOptions($tabcontent, keyName, items, options);
 		});
 		$tabview.append($tabcontent);
@@ -782,7 +790,7 @@ function NZBDonkeyOptions() {
 
 			var save = function(newValue) {
 				if (typeof value === 'undefined' && nzbDonkeyOptions.opts.saveDefaults) {
-					chrome.storage.sync.set({
+					storage.set({
 						[key]: newValue
 					});
 				} else {
@@ -791,7 +799,7 @@ function NZBDonkeyOptions() {
 						var isEqual = util.deepEqual(value, newValue);
 						if (nzbDonkeyOptions.opts.autoSave) {
 							if (!isEqual) {
-								chrome.storage.sync.set({
+								storage.set({
 									[key]: newValue
 								});
 								showSavedAlert();
