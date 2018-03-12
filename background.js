@@ -77,14 +77,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
             nzbDonkey.notification("NZBDonkey was started with a right click but neither on a link nor on a selection", "error");
         }
     }).catch(function(e) {
-        console.error("NZBDonkey - Error: could not load settings");
-        console.error("NZBDonkey - " + e.toString());
-        chrome.notifications.create("NZBDonkey_notification", {
-            type: 'basic',
-            iconUrl: "icons/NZBDonkey_error_128.png",
-            title: 'NZBDonkey',
-            message: "Error: could not load settings"
-        });
+        nzbDonkey.settingsError();
     });
 
 });
@@ -115,33 +108,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             });
         } else if (request.nzbDonkeyNZBLinkURL) {
             nzbDonkey.logging("NZBDonkey was started with a left click on an actual NZBlnk link");
-            nzbDonkey.notification("Starting to search for the nzb file", "info");
             nzbDonkey.processLink(request.nzbDonkeyNZBLinkURL).then(function(response) {
-                return nzbDonkey.searchNZB(response);
-            }).then(function(response) {
-                return nzbDonkey.processTitle(response);
-            }).then(function(response) {
-                return nzbDonkey.categorize(response);
-            }).then(function(response) {
-                return nzbDonkey.processNZBfile(response);
-            }).then(function(response) {
-                return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
-            }).then(function(response) {
-                nzbDonkey.notification(response, "success");
+                nzbDonkey.doTheDonkey(response);
             }).catch(function(e) {
                 nzbDonkey.notification(e.toString(), "error");
                 console.error(e);
             });
         }
     }).catch(function(e) {
-        console.error("NZBDonkey - Error: could not load settings");
-        console.error("NZBDonkey - " + e.toString());
-        chrome.notifications.create("NZBDonkey_notification", {
-            type: 'basic',
-            iconUrl: "icons/NZBDonkey_error_128.png",
-            title: 'NZBDonkey',
-            message: "Error: could not load settings"
-        });
+        nzbDonkey.settingsError();
     });
 
     return true;
@@ -180,6 +155,41 @@ nzbDonkey.loadSettings = function() {
         });
 
     });
+}
+
+// function to show a notification and log it to the console if loading of the settings failed 
+nzbDonkey.settingsError = function() {
+
+    console.error("NZBDonkey - Error: could not load settings");
+    console.error("NZBDonkey - " + e.toString());
+
+    chrome.notifications.create("NZBDonkey_notification", {
+        type: 'basic',
+        iconUrl: "icons/NZBDonkey_error_128.png",
+        title: 'NZBDonkey',
+        message: "Error: could not load settings"
+    });
+
+}
+
+// backbone function of the script
+// to be called as soon as we have all information to start searching
+nzbDonkey.doTheDonkey = function(nzb) {
+    nzbDonkey.notification("Starting to search for" + " " + nzb.title, "info");
+    nzbDonkey.searchNZB(nzb).then(function(response) {
+        return nzbDonkey.processTitle(response);
+    }).then(function(response) {
+        return nzbDonkey.categorize(response);
+    }).then(function(response) {
+        return nzbDonkey.processNZBfile(response);
+    }).then(function(response) {
+        return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
+    }).then(function(response) {
+        nzbDonkey.notification(response, "success");
+    }).catch(function(e) {
+        nzbDonkey.notification(e.toString(), "error");
+        console.error(e);
+    });    
 }
 
 // function to analyze the parameters passed from the content script
