@@ -1503,7 +1503,7 @@ function NZBDonkeyOptions() {
 nzbDonkeyOptions.fields = {};
 
 nzbDonkeyOptions.fields.checkbox = function(value, save) {
-var $checkbox = h('input[type=checkbox]');
+	var $checkbox = h('input[type=checkbox]');
 
 	if (value != null) {
 		$checkbox.checked = value;
