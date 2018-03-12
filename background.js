@@ -11,13 +11,8 @@ chrome.runtime.onInstalled.addListener(function(details) {
 // Set up context menu on script start
 chrome.contextMenus.create({
     title: "Get NZB file",
-    contexts: ["link"],
-    id: "NZBDonkey_openLink"
-});
-chrome.contextMenus.create({
-    title: "Get NZB file",
-    contexts: ["selection"],
-    id: "NZBDonkey_analyseSelection"
+    contexts: ["link", "selection"],
+    id: "NZBDonkey"
 });
 
 // Add listener for clicks on the context menu
@@ -25,29 +20,8 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
 
     // first we load the settings
     nzbDonkey.loadSettings().then(function() {
-        // if the context menu was clicked on a link
-        if (info.menuItemId == "NZBDonkey_openLink") {
-            nzbDonkey.logging("NZBDonkey was started with a right click on a link");
-            nzbDonkey.notification("Starting to search for the nzb file", "info");
-            nzbDonkey.processLink(info.linkUrl).then(function(response) {
-                return nzbDonkey.searchNZB(response);
-            }).then(function(response) {
-                return nzbDonkey.processTitle(response);
-            }).then(function(response) {
-                return nzbDonkey.categorize(response);
-            }).then(function(response) {
-                return nzbDonkey.processNZBfile(response);
-            }).then(function(response) {
-                return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
-            }).then(function(response) {
-                nzbDonkey.notification(response, "success");
-            }).catch(function(e) {
-                nzbDonkey.notification(e.toString(), "error");
-                console.error(e);
-            });
-        }
         // if the context menu was clicked on a selection
-        else if (info.menuItemId == "NZBDonkey_analyseSelection") {
+        if (info.selectionText) {
             nzbDonkey.logging("NZBDonkey was started with a right click on a selection");
             nzbDonkey.logging("analyzing selection");
             chrome.tabs.sendMessage(tab.id, {
@@ -76,6 +50,31 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                     nzbDonkey.logging("analyzing of selection was canceled");
                 }
             });
+        }
+        // if the context menu was clicked on a link
+        else if (info.linkUrl) {
+            nzbDonkey.logging("NZBDonkey was started with a right click on a link");
+            nzbDonkey.notification("Starting to search for the nzb file", "info");
+            nzbDonkey.processLink(info.linkUrl).then(function(response) {
+                return nzbDonkey.searchNZB(response);
+            }).then(function(response) {
+                return nzbDonkey.processTitle(response);
+            }).then(function(response) {
+                return nzbDonkey.categorize(response);
+            }).then(function(response) {
+                return nzbDonkey.processNZBfile(response);
+            }).then(function(response) {
+                return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
+            }).then(function(response) {
+                nzbDonkey.notification(response, "success");
+            }).catch(function(e) {
+                nzbDonkey.notification(e.toString(), "error");
+                console.error(e);
+            });
+        }
+        else {
+            nzbDonkey.logging("NZBDonkey was started with a right click but neither on a link nor on a selection");
+            nzbDonkey.notification("NZBDonkey was started with a right click but neither on a link nor on a selection", "error");
         }
     }).catch(function(e) {
         console.error("NZBDonkey - Error: could not load settings");
