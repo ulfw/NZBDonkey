@@ -420,7 +420,7 @@ function NZBDonkeyOptions() {
 		desc: 'NZBGet password'
 	}, {
 		name: 'password',
-		type: 'text',
+		type: 'password',
 		default: ''
 	}, {
 		type: 'plaintext',
@@ -559,7 +559,7 @@ function NZBDonkeyOptions() {
 		desc: 'Password'
 	}, {
 		name: 'password',
-		type: 'text',
+		type: 'password',
 		default: ''
 	}, {
 		type: 'plaintext',
@@ -1529,6 +1529,21 @@ nzbDonkeyOptions.fields.text = function(value, save) {
 	$textbox.addEventListener('input', debouncedInput);
 	$textbox.addEventListener('change', debouncedInput);
 	return $textbox;
+};
+
+nzbDonkeyOptions.fields.password = function(value, save) {
+	var $passwordbox = h('input[type="password"]', {"class": "form-control"});
+	if (value !== undefined) {
+		$passwordbox.value = value;
+	}
+	var debouncedInput = util.debounce(500, function(e) {
+		if (e.target.validity.valid) {
+			save($passwordbox.value, e);
+		}
+	});
+	$passwordbox.addEventListener('input', debouncedInput);
+	$passwordbox.addEventListener('change', debouncedInput);
+	return $passwordbox;
 };
 
 nzbDonkeyOptions.fields.url = function(value, save, option) {
