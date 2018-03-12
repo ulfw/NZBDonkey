@@ -12,7 +12,7 @@ chrome.runtime.onInstalled.addListener(function(details) {
 chrome.contextMenus.create({
     title: "Get NZB file",
     contexts: ["link", "selection"],
-    id: "NZBDonkey"
+    id: "NZBDonkey_" + (~~(Math.random() * 1e9)).toString(36)
 });
 
 // Add listener for clicks on the context menu
