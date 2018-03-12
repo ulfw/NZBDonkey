@@ -1517,7 +1517,7 @@ nzbDonkeyOptions.fields.checkbox = function(value, save) {
 };
 
 nzbDonkeyOptions.fields.text = function(value, save) {
-	var $textbox = h('input[type=text, class="form-control"]');
+	var $textbox = h('input[type="text"]', {"class": "form-control"});
 	if (value !== undefined) {
 		$textbox.value = value;
 	}
