@@ -1503,7 +1503,7 @@ function NZBDonkeyOptions() {
 nzbDonkeyOptions.fields = {};
 
 nzbDonkeyOptions.fields.checkbox = function(value, save) {
-	var $checkbox = h('input[type=checkbox]');
+var $checkbox = h('input[type=checkbox]');
 
 	if (value != null) {
 		$checkbox.checked = value;
@@ -1517,7 +1517,7 @@ nzbDonkeyOptions.fields.checkbox = function(value, save) {
 };
 
 nzbDonkeyOptions.fields.text = function(value, save) {
-	var $textbox = h('input[type="text"]', {"class": "form-control"});
+	var $textbox = h('input[type="text"]', {class: "form-control"});
 	if (value !== undefined) {
 		$textbox.value = value;
 	}
@@ -1544,6 +1544,7 @@ nzbDonkeyOptions.fields.select = function(value, save, option) {
       var val = $select.value;
       save(valueMap[val] !== undefined ? valueMap[val] : val, e);
     },
+	class: "form-control"
   });
   var firstValue = null;
   option.options.forEach(function(option) {
@@ -1560,7 +1561,7 @@ nzbDonkeyOptions.fields.select = function(value, save, option) {
 };
 
 nzbDonkeyOptions.fields.radio = function(value, save, option) {
-  var $container = h('.radio-options');
+var $container = h('.radio-options', {class: "form-control"});
   var name = option.name + "_" + (~~(Math.random() * 1e9)).toString(36);
   option.options.forEach(function(option) {
     var val = typeof option === 'object' ? option.value : option;
@@ -1594,5 +1595,6 @@ nzbDonkeyOptions.fields.file = function(value, save) {
     onchange: function(e) {
       save(e.target.files, e);
     },
+	class: "form-control"
   });
 };
