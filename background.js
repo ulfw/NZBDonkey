@@ -29,7 +29,6 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
             }, function(nzb) {
                 if (!nzb.cancle) {
                     nzbDonkey.logging("analysis of selection finished");
-                    nzbDonkey.notification("Starting to search for the nzb file", "info");
                     nzbDonkey.processAnalysedSelection(nzb).then(function(response) {
                         nzbDonkey.doTheDonkey(response);
                     }).catch(function(e) {
@@ -44,7 +43,6 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
         // if the context menu was clicked on a link
         else if (info.linkUrl) {
             nzbDonkey.logging("NZBDonkey was started with a right click on a link");
-            nzbDonkey.notification("Starting to search for the nzb file", "info");
             nzbDonkey.processLink(info.linkUrl).then(function(response) {
                 nzbDonkey.doTheDonkey(response);
             }).catch(function(e) {
@@ -53,7 +51,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
             });
         }
         else {
-            nzbDonkey.logging("NZBDonkey was started with a right click but neither on a link nor on a selection");
+            nzbDonkey.logging("NZBDonkey was started with a right click but neither on a link nor on a selection", true);
             nzbDonkey.notification("NZBDonkey was started with a right click but neither on a link nor on a selection", "error");
         }
     }).catch(function(e) {
