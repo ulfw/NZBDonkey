@@ -20,6 +20,16 @@ Currently in beta testing.
 A more detailed description will be added soon.
 
 # Change log
+### v0.4.0
+* New feature: nzb files can now be checked for completeness. The feature is activated by default but can be deactivated in the general settings. Also the threshold value for missing files and segments can be changed.
+  
+  **NOTE:** the check for completeness is very basic and limited because it depends mostly on the information provided in the file's subject set by the program used to upload the files to the usenet. Unfortunately there is no official standard for the file's subject for multiple file uploads.
+* New feature: a desktop notification will now show up if the script has started to search for the nzb file. Informative notifications (e.g. upon start of the script) will have the standard blue icon. Success notification will have green icon and error notification a red icon for better differentiation.
+* Bug fix: context menu will now only show one menu entry if selected text contains a link.
+* Bug fix: Errors will now be catched and a error notification will be shown if download of the nzb files to the download folder fails. Also fixed "invalid filename" error if title does contain a zero width space.
+* Other: the script will now fall back to storage.local if storage.sync is not available/activated (might help to geth the script running on some officially unsupported browsers).
+* Other: some cleanup of the code. Moved repeated code into own functions.
+
 ### v0.3.1
 * Bug fix for: "nzb.password.match is undefined" bug in processNZBfile routine.
 
