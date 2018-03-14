@@ -723,15 +723,41 @@ nzbDonkey.execute.download = function(nzb) {
             conflictAction: "uniquify"
         }, function(id) {
             if (typeof id == "undefined") {
+                nzbDonkey.logging("failed to initiate the download");
                 reject(new Error(chrome.runtime.lastError.message));
             }
             else {
-                nzbDonkey.logging("starting the actual download");
-                var notificationString = "Downloading nzb file" + ":\n" + filename;
-                if (passwordWarning) {
-                    notificationString += notificationString + '\n' + passwordWarning;
+                nzbDonkey.logging("initiated the download");
+                nzbDonkey.notification("Starting to downloading nzb file" + ":\n" + filename);
+            }
+        });
+        chrome.downloads.onChanged.addListener(function(details) {
+            if (isset(() => details.state.current)) {
+                if (details.state.current == "complete") {
+                    nzbDonkey.logging("download completed");
+                    var notificationString = "The nzb file was successfully downloaded to:" + " " + filename;
+                    if (isset(() => passwordWarning)) {
+                        notificationString += '\n' + passwordWarning;
+                    }
+                    resolve(notificationString);
                 }
-                resolve(notificationString);
+                else if (details.state.current == "interrupted") {
+                    if (isset(() => details.error.current)) {
+                        if (details.error.current.match(/^user/i)) {
+                            nzbDonkey.logging("download canceled by the user");
+                            reject(new Error("download of nzb file" + " " + filename + " " + "was canceled"));
+                        }
+                        else if (details.error.current.match(/^file/i)) {
+                            nzbDonkey.logging("error wile saving the nzb file to disk");
+                            reject(new Error("error wile saving the nzb file" + " " + filename + " " + "to disk"));
+                        }
+                        else {
+                            nzbDonkey.logging("error wile downloading the nzb file");
+                            reject(new Error("error wile downloading the nzb file" + " " + filename));
+                        }
+                        console.error(details.error.current);
+                    }
+                }
             }
         });
 
