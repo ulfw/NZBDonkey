@@ -21,13 +21,13 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
     // first we load the settings
     nzbDonkey.loadSettings().then(function() {
         // if the context menu was clicked on a selection
-        if (info.selectionText) {
+        if (isset(() => info.selectionText)) {
             nzbDonkey.logging("NZBDonkey was started with a right click on a selection");
             nzbDonkey.logging("analyzing selection");
             chrome.tabs.sendMessage(tab.id, {
                 nzbDonkeyAnalyzeSelection: true
             }, function(nzb) {
-                if (!nzb.cancle) {
+                if (!isset(() => nzb.cancle)) {
                     nzbDonkey.logging("analysis of selection finished");
                     nzbDonkey.processAnalysedSelection(nzb).then(function(response) {
                         nzbDonkey.doTheDonkey(response);
@@ -41,7 +41,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
             });
         }
         // if the context menu was clicked on a link
-        else if (info.linkUrl) {
+        else if (isset(() => info.linkUrl)) {
             nzbDonkey.logging("NZBDonkey was started with a right click on a link");
             nzbDonkey.processLink(info.linkUrl).then(function(response) {
                 nzbDonkey.doTheDonkey(response);
@@ -65,13 +65,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
     // first we load the settings
     nzbDonkey.loadSettings().then(function() {
-        if (request.nzbDonkeyCatchLinks) {
+        if (isset(() => request.nzbDonkeyCatchLinks)) {
             nzbDonkey.logging("content script has asked whether to catch left clicks on NZBlnk links");
             nzbDonkey.logging("catch left clicks on NZBlnk links is set to" + ": " + nzbDonkeySettings.general.catchLinks);
             sendResponse({
                 nzbDonkeyCatchLinks: nzbDonkeySettings.general.catchLinks
             });
-        } else if (request.nzbDonkeyTestConnection) {
+        } else if (isset(() => request.nzbDonkeyTestConnection)) {
             nzbDonkey.logging("options script has asked to test the connection to the current execType");
             nzbDonkey.testconnection[nzbDonkeySettings.general.execType]().then(function(response) {
                 sendResponse({
@@ -84,7 +84,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     "response": e.toString()
                 });
             });
-        } else if (request.nzbDonkeyNZBLinkURL) {
+        } else if (isset(() => request.nzbDonkeyNZBLinkURL)) {
             nzbDonkey.logging("NZBDonkey was started with a left click on an actual NZBlnk link");
             nzbDonkey.processLink(request.nzbDonkeyNZBLinkURL).then(function(response) {
                 nzbDonkey.doTheDonkey(response);
@@ -117,7 +117,7 @@ nzbDonkey.loadSettings = function() {
     return new Promise(function(resolve, reject) {
 
         // Fall back to storage.local if storage.sync is not available
-        if (chrome.storage.sync) {
+        if (isset(() => chrome.storage.sync)) {
             var storage = chrome.storage.sync;
         }
         else {
@@ -129,7 +129,7 @@ nzbDonkey.loadSettings = function() {
                 if (keys[0] == 'searchengines') {
                     nzbDonkeySettings[keys[1]] = obj[key];
                 } else {
-                    if (typeof nzbDonkeySettings[keys[0]] === 'undefined') {
+                    if (!isset(() => nzbDonkeySettings[keys[0]])) {
                         nzbDonkeySettings[keys[0]] = {};
                     }
                     nzbDonkeySettings[keys[0]][keys[1]] = obj[key];
@@ -184,16 +184,16 @@ nzbDonkey.processAnalysedSelection = function(nzb) {
 
     return new Promise(function(resolve, reject) {
 
-        if (nzb.header) {
+        if (isset(() => nzb.header) && nzb.header != "") {
             nzbDonkey.logging("found header tag" + ": " + nzb.header);
-            if (nzb.title) {
+            if (isset(() => nzb.title) && nzb.title != "") {
                 nzbDonkey.logging("found title tag" + ": " + nzb.title);
             } else {
                 nzbDonkey.logging("no title tag found");
                 nzb.title = nzb.header;
                 nzbDonkey.logging("setting header as title tag");
             }
-            if (nzb.password) {
+            if (isset(() => nzb.password) && nzb.password != "") {
                 nzbDonkey.logging("found password tag" + ": " + nzb.password);
             } else {
                 nzbDonkey.logging("no password tag found");
@@ -233,6 +233,7 @@ nzbDonkey.processLink = function(url) {
                     nzb.password = link.searchParams.get("p");
                     nzbDonkey.logging("found password tag" + ": " + nzb.password);
                 } else {
+                    nzb.password = ""; // define nzb.password even if empty to avoid "undefined" errors
                     nzbDonkey.logging("no password tag found");
                 }
                 resolve(nzb);
@@ -375,7 +376,7 @@ nzbDonkey.testconnection.nzbget = function() {
 
             nzbDonkey.xhr(options).then(function(result) {
                 var response = JSON.parse(result);
-                if (response.result) {
+                if (isset(() => response.result)) {
                     nzbDonkey.logging("NZBGet responded with a success code");
                     resolve("Successfully connected to NZBGet!");
                 } else {
@@ -432,7 +433,7 @@ nzbDonkey.execute.nzbget = function(nzb) {
         });
         nzbDonkey.xhr(options).then(function(result) {
             var response = JSON.parse(result);
-            if (response.result > 0) {
+            if (isset(() => response.result) && response.result > 0) {
                 nzbDonkey.logging("NZBGet responded with a success code");
                 nzbDonkey.logging("the nzb file was successfully pushed to NZBGet");
                 resolve(nzb.title + " successfully pushed to NZBGet");
@@ -473,7 +474,7 @@ nzbDonkey.testconnection.sabnzbd = function(nzb) {
         options.data = formData;
         nzbDonkey.xhr(options).then(function(result) {
             var response = JSON.parse(result);
-            if (response.status) {
+            if (isset(() => response.status)) {
                 nzbDonkey.logging("SABnzbd responded with a success code");
                 resolve("Successfully connected to SABnzbd!");
             } else {
@@ -509,7 +510,7 @@ nzbDonkey.execute.sabnzbd = function(nzb) {
             type: "text/xml"
         });
         var filename = nzb.title;
-        if (nzb.password != "") {
+        if (isset(() => nzb.password) && nzb.password != "") {
             filename += "{{" + nzb.password + "}}";
         }
         var addPaused = (nzbDonkeySettings.sabnzbd.addPaused) ? -2 : -100;
@@ -524,7 +525,7 @@ nzbDonkey.execute.sabnzbd = function(nzb) {
         options.data = formData;
         nzbDonkey.xhr(options).then(function(result) {
             var response = JSON.parse(result);
-            if (response.status) {
+            if (isset(() => response.status)) {
                 nzbDonkey.logging("SABnzbd responded with a success code");
                 nzbDonkey.logging("the nzb file was successfully pushed to SABnzbd");
                 resolve(nzb.title + " successfully pushed to SABnzbd");
@@ -566,7 +567,7 @@ nzbDonkey.testconnection.synology = function(nzb) {
         var SynoData = {};
         nzbDonkey.xhr(options).then(function(result) {
             SynoData = JSON.parse(result);
-            if (SynoData.success) {
+            if (isset(() => SynoData.success)) {
                 options.path = SynoData.data['SYNO.API.Auth'].path;
                 options.parameters = {
                     "api": "SYNO.API.Auth",
@@ -583,7 +584,7 @@ nzbDonkey.testconnection.synology = function(nzb) {
             }
         }).then(function(result) {
             var SynoAuthData = JSON.parse(result);
-            if (SynoAuthData.success) {
+            if (isset(() => SynoAuthData.success)) {
                 nzbDonkey.logging("Synology DownloadStation responded with a success code");
                 resolve("Successfully connected to Synology DownloadStation!");
             } else {
@@ -624,7 +625,7 @@ nzbDonkey.execute.synology = function(nzb) {
         var SynoData = {};
         nzbDonkey.xhr(options).then(function(result) {
            SynoData = JSON.parse(result);
-            if (SynoData.success) {
+            if (isset(() => SynoData.success)) {
                 options.path = SynoData.data['SYNO.API.Auth'].path;
                 options.parameters = {
                     "api": "SYNO.API.Auth",
@@ -641,7 +642,7 @@ nzbDonkey.execute.synology = function(nzb) {
             }
         }).then(function(result) {
             var SynoAuthData = JSON.parse(result);
-            if (SynoAuthData.success) {
+            if (isset(() => SynoAuthData.success)) {
                 options.path = SynoData.data['SYNO.DownloadStation2.Task'].path;
                 delete options.parameters;
                 var content = new Blob([nzb.file], {
@@ -668,7 +669,7 @@ nzbDonkey.execute.synology = function(nzb) {
             }
         }).then(function(result) {
             var SynoResponseData = JSON.parse(result);
-            if (SynoResponseData.success) {
+            if (isset(() => SynoResponseData.success)) {
                 nzbDonkey.logging("Synology Diskstation responded with a success code");
                 nzbDonkey.logging("the nzb file was successfully pushed to Synology DownloadStation");
                 resolve(nzb.title + " successfully pushed to Synology DownloadStation");
@@ -696,13 +697,13 @@ nzbDonkey.execute.download = function(nzb) {
         if (nzbDonkeySettings.download.defaultPath != "") {
             filename += nzbDonkeySettings.download.defaultPath.replace(/^[\/]*(.*)[\/]*$/, '$1') + "/";
         }
-        if (nzb.category != "" && nzbDonkeySettings.download.categoryFolder) {
+        if (isset(() => nzb.category) && nzb.category != "" && nzbDonkeySettings.download.categoryFolder) {
             // sanitize category
             var category = nzb.category.replace(/[/\\?%*:|"<>\r\n\t\0\v\f\u200B]/g, "");
             filename += category + "/";
         }
         filename += nzb.title;
-        if (nzb.password != "") {
+        if (isset(() => nzb.password) && nzb.password != "") {
             if (!/[\/\\%*:"?~<>*|]/.test(nzb.password)) {
                 filename += "{{" + nzb.password + "}}";
             } else {
@@ -779,7 +780,7 @@ nzbDonkey.categorize = function(nzb) {
                 for (var i = 0; i < nzbDonkeySettings.category.automaticCategories.length; i++) {
                     var re = new RegExp(nzbDonkeySettings.category.automaticCategories[i].pattern, "i");
                     nzbDonkey.logging("testing for category " + nzbDonkeySettings.category.automaticCategories[i].name);
-                    if (re.test(nzb.title)) {
+                    if (isset(() => nzb.title) && re.test(nzb.title)) {
                         nzbDonkey.logging("match found while testing for category " + nzbDonkeySettings.category.automaticCategories[i].name);
                         nzb.category = nzbDonkeySettings.category.automaticCategories[i].name;
                         break;
@@ -814,9 +815,9 @@ nzbDonkey.checkNZBfile = function(nzb) {
         var nzbFile = xmlToJSON.parseString(nzb);
 
         // check if it is actually a nzb file
-        if (typeof nzbFile.nzb == "object") {
+        if (isset(() => nzbFile.nzb) && typeof nzbFile.nzb == "object") {
             // if yes, check if it does contain files
-            if (typeof nzbFile.nzb[0].file == "object") {
+            if (isset(() => nzbFile.nzb[0].file) && typeof nzbFile.nzb[0].file == "object") {
 
                 // if set in the settings, check for completeness
                 if (nzbDonkeySettings.general.checkNZBfiles) {
@@ -841,10 +842,10 @@ nzbDonkey.checkNZBfile = function(nzb) {
                     totalFiles = nzbFile.nzb[0].file.length;
 
                     // loop through the files
-                    for (file of nzbFile.nzb[0].file) {
+                    for (let file of nzbFile.nzb[0].file) {
                         // check if the file subject contains the expected amount of files
                         // if not, the expectedFiles counter will remain 0
-                        if (typeof file._attr.subject._value != "undefined") {
+                        if (isset(() => file._attr.subject._value) && file._attr.subject._value != "") {
                             if (reExpectedFiles.test(file._attr.subject._value)) {
                                 // check if the found expected amount of files is bigger than an already found one
                                 // like this the highest number will be used e.g. in cases when an uploader subsequently has added more files
@@ -866,7 +867,7 @@ nzbDonkey.checkNZBfile = function(nzb) {
                                 // this is not very accurate but still in some cases might give an indication for missing segments
                                 if (file.segments[0].segment == "object") {
                                     for (segment of file.segments[0].segment) {
-                                        if (typeof segment._attr.number._value != "undefined") {
+                                        if (isset(() => segment._attr.number._value) && segment._attr.number._value != "") {
                                             if (Number(segment._attr.number._value) > expectedSegmentsPerFile) {
                                                 expectedSegmentsPerFile = Number(segment._attr.number._value);
                                             }
@@ -877,7 +878,7 @@ nzbDonkey.checkNZBfile = function(nzb) {
                         }
 
                         // add the segments of this file to the total amount of segments
-                        if (typeof file.segments[0].segment != "undefined") {
+                        if (isset(() => file.segments[0].segment) && typeof file.segments[0].segment == "object") {
                             totalSegments += file.segments[0].segment.length;
                         }
 
@@ -936,7 +937,7 @@ nzbDonkey.processNZBfile = function(nzb) {
 
         // add the meta data to the nzb file
         var nzbMetadata = '';
-        if (typeof nzb.title !== 'undefined') {
+        if (isset(() => nzb.title) && nzb.title != "") {
             if (!nzb.title.match(/[&"\'<>]/)) {
                 nzbMetadata += '\t<meta type="title">' + nzb.title + '</meta>\n';
                 nzbDonkey.logging("nzb file meta data: title tag set to: " + nzb.title);
@@ -944,7 +945,7 @@ nzbDonkey.processNZBfile = function(nzb) {
                 nzbDonkey.logging("nzb file meta data: could not set title tag due to invalid characters");
             }
         }
-        if (typeof nzb.password !== 'undefined') {
+        if (isset(() => nzb.password) && nzb.password != "") {
             if (!nzb.password.match(/[&"\'<>]/)) {
                 nzbMetadata += '\t<meta type="password">' + nzb.password + '</meta>\n';
                 nzbDonkey.logging("nzb file meta data: password tag set to: " + nzb.password);
@@ -952,7 +953,7 @@ nzbDonkey.processNZBfile = function(nzb) {
                 nzbDonkey.logging("nzb file meta data: could not set password tag due to invalid characters");
             }
         }
-        if (typeof nzb.category !== 'undefined') {
+        if (isset(() => nzb.category) && nzb.category != "") {
             if (!nzb.category.match(/[&"\'<>]/)) {
                 nzbMetadata += '\t<meta type="category">' + nzb.category + '</meta>\n';
                 nzbDonkey.logging("nzb file meta data: category tag set to: " + nzb.category);
@@ -1117,3 +1118,22 @@ Promise.prototype.invert = function() {
 Promise.any = function(ps) {
     return Promise.all(ps.map((p) => p.invert())).invert();
 };
+
+// from https://stackoverflow.com/questions/2281633/javascript-isset-equivalent/2281671
+// call it: isset(() => variable.to.be.checked)
+/**
+ * Checks to see if a value is set.
+ *
+ * @param {Function} accessor Function that returns our value
+ */
+function isset (accessor) {
+  try {
+    // Note we're seeing if the returned value of our function is not
+    // undefined
+    return typeof accessor() !== 'undefined'
+  } catch (e) {
+    // And we're able to catch the Error it would normally throw for
+    // referencing a property of undefined
+    return false
+  }
+}
