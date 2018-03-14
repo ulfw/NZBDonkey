@@ -385,7 +385,7 @@ nzbDonkey.testconnection.nzbget = function() {
             }).catch(function(e) {
                 nzbDonkey.logging("an error occurred while connection to NZBGet", true);
                 nzbDonkey.logging(e.toString(), true);
-                reject("An error occurred while connection to NZBGet" + "\n" + e.toString());
+                reject(new Error("An error occurred while connection to NZBGet" + "\n" + e.toString()));
             });
         });
 
@@ -483,7 +483,7 @@ nzbDonkey.testconnection.sabnzbd = function(nzb) {
         }).catch(function(e) {
             nzbDonkey.logging("an error occurred while connection to SABnzbd", true);
             nzbDonkey.logging(e.toString(), true);
-            reject("An error occurred while connection to SABnzbd" + "\n" + e.toString());
+            reject(new Error("An error occurred while connection to SABnzbd" + "\n" + e.toString()));
         });
 
     });
@@ -593,7 +593,7 @@ nzbDonkey.testconnection.synology = function(nzb) {
         }).catch(function(e) {
             nzbDonkey.logging("an error occurred while connection to Synology DownloadStation", true);
             nzbDonkey.logging(e.toString(), true);
-            reject("An error occurred while connection to Synology DownloadStation" + "\n" + e.toString());
+            reject(new Error("An error occurred while connection to Synology DownloadStation" + "\n" + e.toString()));
         });
 
     });
