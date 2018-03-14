@@ -33,7 +33,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                         nzbDonkey.doTheDonkey(response);
                     }).catch(function(e) {
                         nzbDonkey.notification(e.toString(), "error");
-                        console.error(e);
+                        nzbDonkey.logging(e, true);
                     });
                 } else {
                     nzbDonkey.logging("analyzing of selection was canceled");
@@ -47,7 +47,7 @@ chrome.contextMenus.onClicked.addListener(function(info, tab) {
                 nzbDonkey.doTheDonkey(response);
             }).catch(function(e) {
                 nzbDonkey.notification(e.toString(), "error");
-                console.error(e);
+                nzbDonkey.logging(e, true);
             });
         }
         else {
@@ -90,7 +90,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 nzbDonkey.doTheDonkey(response);
             }).catch(function(e) {
                 nzbDonkey.notification(e.toString(), "error");
-                console.error(e);
+                nzbDonkey.logging(e, true);
             });
         }
     }).catch(function(e) {
@@ -173,7 +173,7 @@ nzbDonkey.doTheDonkey = function(nzb) {
         nzbDonkey.notification(response, "success");
     }).catch(function(e) {
         nzbDonkey.notification(e.toString(), "error");
-        console.error(e);
+        nzbDonkey.logging(e, true);
     });    
 }
 
@@ -755,7 +755,7 @@ nzbDonkey.execute.download = function(nzb) {
                             nzbDonkey.logging("error wile downloading the nzb file");
                             reject(new Error("error wile downloading the nzb file" + " " + filename));
                         }
-                        console.error(details.error.current);
+                        nzbDonkey.logging(details.error.current, true);
                     }
                 }
             }
