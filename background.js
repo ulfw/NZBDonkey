@@ -748,12 +748,12 @@ nzbDonkey.execute.download = function(nzb) {
                             reject(new Error("download of nzb file" + " " + filename + " " + "was canceled"));
                         }
                         else if (details.error.current.match(/^file/i)) {
-                            nzbDonkey.logging("error wile saving the nzb file to disk");
-                            reject(new Error("error wile saving the nzb file" + " " + filename + " " + "to disk"));
+                            nzbDonkey.logging("error while saving the nzb file to disk");
+                            reject(new Error("error while saving the nzb file" + " " + filename + " " + "to disk"));
                         }
                         else {
-                            nzbDonkey.logging("error wile downloading the nzb file");
-                            reject(new Error("error wile downloading the nzb file" + " " + filename));
+                            nzbDonkey.logging("error while downloading the nzb file");
+                            reject(new Error("error while downloading the nzb file" + " " + filename));
                         }
                         nzbDonkey.logging(details.error.current, true);
                     }
