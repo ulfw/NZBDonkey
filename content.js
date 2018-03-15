@@ -107,14 +107,26 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                         sendResponse({
                             cancle: true
                         });  
-                        return true;
                     }
                     else if (v === "open") {
-                        sendResponse({
-                            title : nzb.title,
-                            header : nzb.header,
-                            password : nzb.password
-                        });
+                        if (nzb.header == "") {
+                            e.preventDefault();
+                            $.prompt({
+                                state0: {
+                                    title: "NZBDonkey - ERROR",
+                                    html: '<div>Header field cannot be empty!</div>',
+                                    buttons: {
+                                        "OK": "close"
+                                    },
+                                }
+                            });
+                        } else {
+                            sendResponse({
+                                title : nzb.title,
+                                header : nzb.header,
+                                password : nzb.password
+                            });
+                        }
                     }
                 }
             }
