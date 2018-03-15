@@ -146,10 +146,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                     for (var i = 0, len = sel.rangeCount; i < len; ++i) {
                         container.appendChild(sel.getRangeAt(i).cloneContents());
                     }
-                    html = container.outerHTML;
+                    html = container.innerHTML;
                 }
             }
-            return html
+            return "<div>" + html + "</div>"; // encapsulate with a div container otherwise jQuery.text() will remove plain text, e.g. if selection was done in a text field only
         }
 
     }
