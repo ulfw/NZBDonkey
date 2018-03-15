@@ -1,5 +1,7 @@
 // ask the background script if we should catch left clicks on NZBLinks
-chrome.runtime.sendMessage({nzbDonkeyCatchLinks: true}, function(response) {
+chrome.runtime.sendMessage({
+    nzbDonkeyCatchLinks: true
+}, function(response) {
 
     // if yes
     if (response.nzbDonkeyCatchLinks) {
@@ -13,29 +15,32 @@ chrome.runtime.sendMessage({nzbDonkeyCatchLinks: true}, function(response) {
                 if (target instanceof HTMLAnchorElement) {
                     if (target.getAttribute('href').match(/^nzblnk/i)) {
                         event.preventDefault();
-                        chrome.runtime.sendMessage({ nzbDonkeyNZBLinkURL: target.getAttribute('href') });
+                        chrome.runtime.sendMessage({
+                            nzbDonkeyNZBLinkURL: target.getAttribute('href')
+                        });
                     }
                     break;
                 }
                 target = target.parentNode;
             }
         }, true);
-        
+
     }
 
 });
 
-
+// add listener for messages from the background script
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
+    // if background script has asked to analyze the selected text
     if (request.nzbDonkeyAnalyzeSelection) {
 
         // define the variables
         var nzb = {
-            "selection" : "",
-            "title" : "",
-            "header" : "",
-            "password" : ""
+            "selection": "",
+            "title": "",
+            "header": "",
+            "password": ""
         }
 
         // get html source from the selected text and replace input tags by their value
@@ -61,7 +66,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         // we first assume that the NZB file name is on its own line
         if (/^(.*){{(.*?)}}/m.test(nzb.selection)) {
             // set the title and password according to the NZB filename
-            nzb.title = nzb.selection.match(/^(.*){{(.*?)}}/m)[1]; 
+            nzb.title = nzb.selection.match(/^(.*){{(.*?)}}/m)[1];
             nzb.password = nzb.selection.match(/^(.*){{(.*?)}}/m)[2];
             // check if maybe there is nevertheless a leading description and remove it from the title
             // assuming that the leading description includes the word NZB and ends with a colon
@@ -88,10 +93,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         $.prompt({
             state0: {
                 title: "NZBDonkey",
-                html: '<label class="linker" for="nzb_title">Title:</label><span class="linker"><input type="text" id="nzb_title" name="title" value="' + nzb.title + '"/></span><br/>'
-                    + '<label class="linker" for="nzb_header">Header:</label><span class="linker"><input type="text" id="nzb_header" name="header" value="' + nzb.header + '"/></span><br/>'
-                    + '<label class="linker" for="nzb_password">Password:</label><span class="linker"><input type="text" id="nzb_password" name="password" value="' + nzb.password + '"/></span><br/>'
-                    + '<label class="linker" for="nzb_selection">Selected text:</label><span class="linker"><textarea id="nzb_selection" rows="7">' + nzb.selection + '</textarea></span><br/>',
+                html: '<label class="linker" for="nzb_title">Title:</label><span class="linker"><input type="text" id="nzb_title" name="title" value="' + nzb.title + '"/></span><br/>' +
+                    '<label class="linker" for="nzb_header">Header:</label><span class="linker"><input type="text" id="nzb_header" name="header" value="' + nzb.header + '"/></span><br/>' +
+                    '<label class="linker" for="nzb_password">Password:</label><span class="linker"><input type="text" id="nzb_password" name="password" value="' + nzb.password + '"/></span><br/>' +
+                    '<label class="linker" for="nzb_selection">Selected text:</label><span class="linker"><textarea id="nzb_selection" rows="7">' + nzb.selection + '</textarea></span><br/>',
                 buttons: {
                     "Get NZB file": "open",
                     "Cancel": "close"
@@ -100,15 +105,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 close: function(e) {
                     sendResponse({
                         cancle: true
-                    });                    
+                    });
                 },
                 submit: function(e, v, m, nzb) {
                     if (v === "close") {
                         sendResponse({
                             cancle: true
-                        });  
-                    }
-                    else if (v === "open") {
+                        });
+                    } else if (v === "open") {
                         if (nzb.header == "") {
                             e.preventDefault();
                             $.prompt({
@@ -122,9 +126,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                             });
                         } else {
                             sendResponse({
-                                title : nzb.title,
-                                header : nzb.header,
-                                password : nzb.password
+                                "title": nzb.title,
+                                "header": nzb.header,
+                                "password": nzb.password
                             });
                         }
                     }
@@ -133,7 +137,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         });
 
         // function to get the html from the selection
-         function getSelectionHtml() {
+        function getSelectionHtml() {
             var html = "";
             if (typeof window.getSelection != "undefined") {
                 var sel = window.getSelection();
@@ -151,5 +155,5 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
 
     return true;
-    
+
 });
