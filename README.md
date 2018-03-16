@@ -20,6 +20,11 @@ Currently in beta testing.
 A more detailed description will be added soon.
 
 ## Change log
+### v0.4.1
+* Content script overlay: added an error prompt if header field is empty
+* Some corrections to the options page (thanks to ChaosMarc)
+* Some general improvements to the scripts
+
 ### v0.4.0
 * New feature: nzb files can now be checked for completeness. The feature is activated by default but can be deactivated in the general settings. Also the threshold value for missing files and segments can be changed.
   
