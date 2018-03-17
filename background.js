@@ -216,34 +216,43 @@ nzbDonkey.processLink = function(url) {
     return new Promise(function(resolve, reject) {
  
         if (url.match(/^nzblnk:/i)) {
-            var link = new URL(url);
-            var nzb = {};
-            if (link.searchParams.get("h")) {
-                nzb.header = link.searchParams.get("h");
-                nzbDonkey.logging("found header tag" + ": " + nzb.header);
-                if (link.searchParams.get("t")) {
-                    nzb.title = link.searchParams.get("t");
-                    nzbDonkey.logging("found title tag" + ": " + nzb.title);
-                } else {
-                    nzbDonkey.logging("no title tag found");
-                    nzb.title = nzb.header;
-                    nzbDonkey.logging("setting header as title tag");
+            var query = url.match(/^(([^:/?#]+):)?(\/{0,2}([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/)[7].match(/[^&;=]*=[^&;=]*/g);;
+            if (isset(() => query.length) && query.length > 0) {
+                var parameters = {};
+                for (var i = 0; i < query.length; i++) {
+                    parameters[decodeURIComponent(query[i].match(/([^=]*)=/)[1])] = query[i].match(/=([^=]*)/)[1] ;
                 }
-                if (link.searchParams.get("p")) {
-                    nzb.password = link.searchParams.get("p");
-                    nzbDonkey.logging("found password tag" + ": " + nzb.password);
+                var nzb = {};
+                if (isset(() => parameters.h) && parameters.h !="") {
+                    nzb.header = decodeURIComponent(parameters.h);
+                    nzbDonkey.logging("found header parameter" + ": " + nzb.header);
+                    if (isset(() => parameters.t) && parameters.t !="") {
+                        nzb.title = decodeURIComponent(parameters.t.replace(/\+/g, " "));
+                        nzbDonkey.logging("found title parameter" + ": " + nzb.title);
+                    } else {
+                        nzbDonkey.logging("no title parameter found");
+                        nzb.title = nzb.header;
+                        nzbDonkey.logging("setting header as title parameter");
+                    }
+                    if (isset(() => parameters.p) && parameters.p !="") {
+                        nzb.password = decodeURIComponent(parameters.p);
+                        nzbDonkey.logging("found password parameter" + ": " + nzb.password);
+                    } else {
+                        nzb.password = ""; // define nzb.password even if empty to avoid "undefined" errors
+                        nzbDonkey.logging("no password parameter found");
+                    }
+                    resolve(nzb);
                 } else {
-                    nzb.password = ""; // define nzb.password even if empty to avoid "undefined" errors
-                    nzbDonkey.logging("no password tag found");
+                    nzbDonkey.logging("invalid NZBlnk: no header parameter found", true);
+                    reject(new Error("invalid NZBlnk: no header parameter found"));
                 }
-                resolve(nzb);
             } else {
-                nzbDonkey.logging("no header tag found", true);
-                reject(new Error("no header tag found"));
+                nzbDonkey.logging("invalid NZBlnk: no parameters found", true);
+                reject(new Error("invalid NZBlnk: no parameters found"));
             }
         } else {
-            nzbDonkey.logging("this is not a valid NZBlnk link", true);
-            reject(new Error("this is not a valid NZBlnk link"));
+            nzbDonkey.logging("this is not a NZBlnk link", true);
+            reject(new Error("this is not a NZBlnk link"));
         }
 
     });
