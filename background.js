@@ -22,8 +22,6 @@ Promise.any = function(ps) {
 // define global nzbDonkey variable
 var nzbDonkey = {};
 
-nzbDonkey.scriptID = (~~(Math.random() * 1e9)).toString(36);
-
 // define global nzbDonkey variable for the nzbDonkey context menu ID
 nzbDonkey.contextMenuID = "NZBDonkey";
 
