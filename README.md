@@ -1,3 +1,5 @@
+![alt text](https://raw.githubusercontent.com/Tensai75/NZBDonkey/master/icons/NZBDonkey_128.png "NZBDonkey Logo")
+
 # NZBDonkey
 
 ### The ultimate NZB file downloader extension for Chrome and Firefox
@@ -9,17 +11,46 @@ Download for Firefox: [Firefox Add-on](https://addons.mozilla.org/de/firefox/add
 
 ## Description
 Add-on to automatically download NZB files or send them to NZBGet, SABnzbd or Synology DownloadStation.
+* Works either with NZBlnk links or with header, password and title information provided as plain text.
+* Searches simultaneously in different NZB search engines
+* Possibility to intercept NZB file downloads from any web site
+* Highly configurable
+  * set target for the NZB file:
+    * download to the browsers download folder
+    * directly send to SABnzbd, NZBGet or Synology DownloadStation
+  * supports the setting of a default category or automatic categories
+  * supports simple checking of the NZB file for completeness
+  * advanced settings to configure the NZB search engines
+  * and more...
 
-Right click on a NZBlnk link and choose "Get NZB file". If no NZBlnk link is provided, select title, header and password, then right click on the selected text and choose "Get NZB file".
-By default the extension is also configured to catch left clicks on a NZBlnk link and process them. This can be deactivated in the general settings.
+__Caution:__ this add-on is currently still in beta testing.
 
-Set the corresponding settings in the settings page in order to send the NZB file directly to NZBGet, SABnzbd or Synology DownloadStation.
-The setting options are mostly self explanatory.
+## How to use this add-on
+### NZBlnk
+Just left click on a NZBlnk link and NZBDonkey will take over and search for the NZB file. Or right click on a NZBlnk link and choose "Get NZB file".
+Catching left mouse clicks on a NZBlnk link can be deactivated in the settings, e.g. if you would like to use NZBMonkey in parallel
 
-Currently in beta testing.
-A more detailed description will be added soon.
+### Header, password and title information provided as plain text
+If no NZBlnk link is provided, select title, header and password, then right click on the selected text and choose "Get NZB file".
+An overlay window will appear showing the extracted title, header and password. If automatic parsing of the selected text did not work correctly you can now manually enter or correct the title, header or password. For your convenient the selected text is shown as well to facilitate to copy and paste of the required information.
+If the title, header and password information is correct select "Get NZB file" and NZBDonkey will take over and search for the NZB file.
+
+### NZB file download interception
+Just add the domain of the website where you would like the download of NZB file to be handled with NZBDonkey to the list of domains in the "NZB download interception" settings page. NZBDonkey will then capture any NZB file download from this website.
+If there is always the error "this is not a valid nzb file" try to add the domain to the list of domains needing special treatment and choose from one of the special treatment options.
+If no special treatment option is working for this website please open an issue on github providing as much information about this website as possible.
 
 ## Change log
+### v0.5.0
+* New feature: nzb file download interception
+  * option to set domains where nzb file downloads shall be intercepted
+  * intercepted nzb file will be handled and downloaded or sent to a download program according to the NZBDonkey settings
+* Due to the new nzb file download interception function the background script has again been heavily rewritten
+  * background page is now persistent
+  * the script will be initialized and settings loaded upon the browsers start
+  * changes to the settings will reinitialize the script and reload the settings
+* options script and manifest file reformatted
+
 ### v0.4.1
 * Content script overlay: added an error prompt if header field is empty
 * Some corrections to the options page (thanks to ChaosMarc)

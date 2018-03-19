@@ -42,6 +42,9 @@
                             <a class="nav-link" id="advanced-tab" href="#advanced">Advanced</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" id="interception-tab" href="#interception">NZB download interception</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" id="about-tab" href="#about">About</a>
                         </li>
                         <li class="nav-item">
@@ -220,6 +223,32 @@
                                 <strong>Download URL:</strong> URL called to download the NZB file. Use "%s" for the NZB file ID.<br /><br />
                                 <strong>CAUTION: these search engines settings will likely be overwritten on updates of this extension.</strong><br />
                                 Make sure to save your personal search engine settings.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="interception" class="flex-content tabcontent" style="display: none;">
+            <div class="flex-container">
+                <div class="flex-item-fixed-header border-bottom">
+                    <div class="row m-0">
+                        <div class="col">
+                            <h3>Interception Settings</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-item-fluid">
+                    <div class="flex-content">
+                        <div class="row m-0 py-0">
+                            <div id="interceptionContent" class="col">
+                            </div>
+                        </div>
+                        <div class="row m-0 py-0">
+                            <div class="col">
+                                <strong>Active:</strong> check if you want to intercept NZB file downloads on this domain<br />
+                                <strong>Domain:</strong> base domain where you want to intercept NZB file download. CAUTION: do not add "www" or any other subdomains.<br />
+                                <strong>Special treatment:</strong> choose from the options which special treatment is required for this domain.<br />
                             </div>
                         </div>
                     </div>

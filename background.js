@@ -1,113 +1,227 @@
-// listen for the on Installed event
+// listen for the onInstalled event
 chrome.runtime.onInstalled.addListener(function(details) {
     if (details.OnInstalledReason != 'chrome_update') {
         // delete the stored searchengines settings to force loading the default settings
-        chrome.storage.sync.remove('searchengines.searchengines');
+        // currently not required because no changes to these default settings have been done
+        // chrome.storage.sync.remove('searchengines.searchengines');
+
         // open the options page to have the default settings saved
         chrome.runtime.openOptionsPage();
     }
 });
 
-// Set up context menu on script start
-chrome.contextMenus.create({
-    title: "Get NZB file",
-    contexts: ["link", "selection"],
-    id: "NZBDonkey_" + (~~(Math.random() * 1e9)).toString(36)
-});
+// modify the promise prototype to add function "any"
+// from https://stackoverflow.com/questions/39940152/get-first-fulfilled-promise
+Promise.prototype.invert = function() {
+    return new Promise((res, rej) => this.then(rej, res));
+};
+Promise.any = function(ps) {
+    return Promise.all(ps.map((p) => p.invert())).invert();
+};
 
-// Add listener for clicks on the context menu
-chrome.contextMenus.onClicked.addListener(function(info, tab) {
+// define global nzbDonkey variable
+var nzbDonkey = {};
 
-    // first we load the settings
-    nzbDonkey.loadSettings().then(function() {
-        // if the context menu was clicked on a selection
-        if (isset(() => info.selectionText)) {
-            nzbDonkey.logging("NZBDonkey was started with a right click on a selection");
-            nzbDonkey.logging("analyzing selection");
-            chrome.tabs.sendMessage(tab.id, {
-                nzbDonkeyAnalyzeSelection: true
-            }, function(nzb) {
-                if (!isset(() => nzb.cancle)) {
-                    nzbDonkey.logging("analysis of selection finished");
-                    nzbDonkey.processAnalysedSelection(nzb).then(function(response) {
-                        nzbDonkey.doTheDonkey(response);
-                    }).catch(function(e) {
-                        nzbDonkey.notification(e.toString(), "error");
-                        nzbDonkey.logging(e, true);
-                    });
-                } else {
-                    nzbDonkey.logging("analyzing of selection was canceled");
-                }
-            });
+nzbDonkey.scriptID = (~~(Math.random() * 1e9)).toString(36);
+
+// define global nzbDonkey variable for the nzbDonkey context menu ID
+nzbDonkey.contextMenuID = "NZBDonkey";
+
+// define global nzbDonkey variable for the nzbDoneky settings
+nzbDonkey.settings = {};
+
+// define global nzbDonkey variable for the nzbDoneky functions
+nzbDonkey.execute = {};
+nzbDonkey.testconnection = {};
+
+// define global nzbDonkey variable for the storage -> fall back to storage.local if storage.sync is not available
+if (isset(() => chrome.storage.sync)) {
+    nzbDonkey.storage = chrome.storage.sync;
+    console.log("NZBDonkey - INFO: storage set to storage.sync");
+}
+else {
+    nzbDonkey.storage = chrome.storage.local;
+    console.log("NZBDonkey - INFO: storage set to storage.local");
+}
+
+// define all nzbDonkey functions
+
+// function to initialize the script and the event listeners
+nzbDonkey.initializeScript = function() {
+
+    return new Promise(function(resolve, reject) {
+        
+        // remove all context menus
+        nzbDonkey.logging("removing all context menus");
+        chrome.contextMenus.removeAll();
+
+        // setting the context menu for the 'Get NZB file' action
+        nzbDonkey.logging("setting the context menu for the 'Get NZB file' action");  
+        chrome.contextMenus.create({
+            title: "Get NZB file",
+            contexts: ["link", "selection"],
+            id: nzbDonkey.contextMenuID + "_GetFile"
+        });
+
+/*
+        // setting the context menu for the 'Check NZB file' option
+        nzbDonkey.logging("setting the context menu for the 'Check NZB file' option");  
+        chrome.contextMenus.create({
+            title: "Check NZB file",
+            type: "checkbox",
+            checked: nzbDonkey.settings.general.checkNZBfiles,
+            contexts: ["all"],
+            id: nzbDonkey.contextMenuID + "_CheckFile"
+        });
+*/
+        
+        // setting the event listener for context menu clicks
+        if (chrome.contextMenus.onClicked.hasListener(nzbDonkey.contextMenuEventListener)) {
+            nzbDonkey.logging("removing old event listener for the context menu clicks");
+            chrome.contextMenus.onClicked.removeListener(nzbDonkey.contextMenuEventListener);
         }
-        // if the context menu was clicked on a link
-        else if (isset(() => info.linkUrl)) {
-            nzbDonkey.logging("NZBDonkey was started with a right click on a link");
-            nzbDonkey.processLink(info.linkUrl).then(function(response) {
-                nzbDonkey.doTheDonkey(response);
+        nzbDonkey.logging("setting event listener for the context menu clicks");
+        chrome.contextMenus.onClicked.addListener(nzbDonkey.contextMenuEventListener);
+
+        // setting the event listener for messages from the content or options script
+        if (chrome.runtime.onMessage.hasListener(nzbDonkey.messageEventListener)) {
+            nzbDonkey.logging("removing old event listener for the messages from content or options script");
+            chrome.runtime.onMessage.removeListener(nzbDonkey.messageEventListener);
+        }
+        nzbDonkey.logging("setting event listener for the messages from content or options script");
+        chrome.runtime.onMessage.addListener(nzbDonkey.messageEventListener);
+        
+        // setting the event listener for settings changes
+        if (chrome.storage.onChanged.hasListener(nzbDonkey.reinitializeScript)) {
+            nzbDonkey.logging("removing old event listener for changes to the settings");
+            chrome.storage.onChanged.removeListener(nzbDonkey.reinitializeScript);
+        }
+        nzbDonkey.logging("setting event listener for changes to the settings");
+        chrome.storage.onChanged.addListener(nzbDonkey.reinitializeScript);
+
+        // removing old event listener for the onHeadersReceived event
+        if (chrome.webRequest.onHeadersReceived.hasListener(nzbDonkey.onHeadersReceivedEventListener)) {
+            nzbDonkey.logging("removing old event listener for the onHeadersReceived event");
+            chrome.webRequest.onHeadersReceived.removeListener(nzbDonkey.onHeadersReceivedEventListener);
+        }
+        // removing old event listener for the onBeforeRequest event
+        if (chrome.webRequest.onBeforeRequest.hasListener(nzbDonkey.onBeforeRequestEventListener)) {
+            nzbDonkey.logging("removing old event listener for the onBeforeRequest event");
+            chrome.webRequest.onBeforeRequest.removeListener(nzbDonkey.onBeforeRequestEventListener);
+        }
+        // removing old event listener for the onBeforeSendHeaders event
+        if (chrome.webRequest.onBeforeSendHeaders.hasListener(nzbDonkey.onBeforeSendHeadersEventListener)) {
+            nzbDonkey.logging("removing old event listener for the onBeforeSendHeaders event");
+            chrome.webRequest.onBeforeSendHeaders.removeListener(nzbDonkey.onBeforeSendHeadersEventListener);
+        }
+        // if enabled in the settings, set up the nzb download interception
+        if (nzbDonkey.settings.interception.interceptNzbDownloads) {
+            nzbDonkey.setupNzbDownloadInterception().then(function() {
+                resolve();
             }).catch(function(e) {
-                nzbDonkey.notification(e.toString(), "error");
-                nzbDonkey.logging(e, true);
+                throw new Error(e);
             });
         }
         else {
-            nzbDonkey.logging("NZBDonkey was started with a right click but neither on a link nor on a selection", true);
-            nzbDonkey.notification("NZBDonkey was started with a right click but neither on a link nor on a selection", "error");
+            resolve();
         }
-    }).catch(function(e) {
-        nzbDonkey.settingsError();
+    
     });
 
-});
+}
 
-// Add listener for messages from the content or options script
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-
-    // first we load the settings
+// function to reinitialize the script upon settings changes
+nzbDonkey.reinitializeScript = function(changes, area) {
+    nzbDonkey.logging("reinitializing the script");
     nzbDonkey.loadSettings().then(function() {
-        if (isset(() => request.nzbDonkeyCatchLinks)) {
-            nzbDonkey.logging("content script has asked whether to catch left clicks on NZBlnk links");
-            nzbDonkey.logging("catch left clicks on NZBlnk links is set to" + ": " + nzbDonkeySettings.general.catchLinks);
-            sendResponse({
-                nzbDonkeyCatchLinks: nzbDonkeySettings.general.catchLinks
-            });
-        } else if (isset(() => request.nzbDonkeyTestConnection)) {
-            nzbDonkey.logging("options script has asked to test the connection to the current execType");
-            nzbDonkey.testconnection[nzbDonkeySettings.general.execType]().then(function(response) {
-                sendResponse({
-                    "success": true,
-                    "response": response
-                });
-            }).catch(function(e) {
-                sendResponse({
-                    "success": false,
-                    "response": e.toString()
-                });
-            });
-        } else if (isset(() => request.nzbDonkeyNZBLinkURL)) {
-            nzbDonkey.logging("NZBDonkey was started with a left click on an actual NZBlnk link");
-            nzbDonkey.processLink(request.nzbDonkeyNZBLinkURL).then(function(response) {
-                nzbDonkey.doTheDonkey(response);
-            }).catch(function(e) {
-                nzbDonkey.notification(e.toString(), "error");
-                nzbDonkey.logging(e, true);
-            });
-        }
+        nzbDonkey.initializeScript().then(function() {
+            nzbDonkey.logging("the script was reinitialized successfully");
+        }).catch(function(e){
+            nzbDonkey.logging("the script failed to reinitialize", true);
+            nzbDonkey.logging(e, true);
+            nzbDonkey.notification("The script failed to reinitialize!\n" + e.toString() + "\nPlease restart the Browser.", "error");
+        });
     }).catch(function(e) {
         nzbDonkey.settingsError();
     });
+
+}
+
+// function to set the event listener for clicks on the context menu
+nzbDonkey.contextMenuEventListener = function(info, tab) {
+
+    // if the context menu was clicked on a selection
+    if (isset(() => info.selectionText)) {
+        nzbDonkey.logging("NZBDonkey was started with a right click on a selection");
+        nzbDonkey.logging("analyzing selection");
+        chrome.tabs.sendMessage(tab.id, {
+            nzbDonkeyAnalyzeSelection: true
+        }, function(nzb) {
+            if (!isset(() => nzb.cancle)) {
+                nzbDonkey.logging("analysis of selection finished");
+                nzbDonkey.processAnalysedSelection(nzb).then(function(response) {
+                    nzbDonkey.doTheDonkey(response);
+                }).catch(function(e) {
+                    nzbDonkey.notification(e.toString(), "error");
+                    nzbDonkey.logging(e, true);
+                });
+            } else {
+                nzbDonkey.logging("analyzing of selection was canceled");
+            }
+        });
+    }
+    // if the context menu was clicked on a link
+    else if (isset(() => info.linkUrl)) {
+        nzbDonkey.logging("NZBDonkey was started with a right click on a link");
+        nzbDonkey.processLink(info.linkUrl).then(function(response) {
+            nzbDonkey.doTheDonkey(response);
+        }).catch(function(e) {
+            nzbDonkey.notification(e.toString(), "error");
+            nzbDonkey.logging(e, true);
+        });
+    }
+    else {
+        nzbDonkey.logging("NZBDonkey was started with a right click but neither on a link nor on a selection", true);
+        nzbDonkey.notification("NZBDonkey was started with a right click but neither on a link nor on a selection", "error");
+    }
+
+}
+
+// function to set the event listener for messages from the content or options script
+nzbDonkey.messageEventListener = function(request, sender, sendResponse) {
+
+    if (isset(() => request.nzbDonkeyCatchLinks)) {
+        nzbDonkey.logging("content script has asked whether to catch left clicks on NZBlnk links");
+        nzbDonkey.logging("catch left clicks on NZBlnk links is set to" + ": " + nzbDonkey.settings.general.catchLinks);
+        sendResponse({
+            nzbDonkeyCatchLinks: nzbDonkey.settings.general.catchLinks
+        });
+    } else if (isset(() => request.nzbDonkeyTestConnection)) {
+        nzbDonkey.logging("options script has asked to test the connection to the current execType");
+        nzbDonkey.testconnection[nzbDonkey.settings.general.execType]().then(function(response) {
+            sendResponse({
+                "success": true,
+                "response": response
+            });
+        }).catch(function(e) {
+            sendResponse({
+                "success": false,
+                "response": e.toString()
+            });
+        });
+    } else if (isset(() => request.nzbDonkeyNZBLinkURL)) {
+        nzbDonkey.logging("NZBDonkey was started with a left click on an actual NZBlnk link");
+        nzbDonkey.processLink(request.nzbDonkeyNZBLinkURL).then(function(response) {
+            nzbDonkey.doTheDonkey(response);
+        }).catch(function(e) {
+            nzbDonkey.notification(e.toString(), "error");
+            nzbDonkey.logging(e, true);
+        });
+    }
 
     return true;
 
-});
-
-// settings will be stored in a global variable
-var nzbDonkeySettings = {};
-
-// declare all nzbDoneky functions
-var nzbDonkey = {};
-nzbDonkey.execute = {};
-nzbDonkey.testconnection = {};
+}
 
 // function to load the settings
 nzbDonkey.loadSettings = function() {
@@ -116,23 +230,16 @@ nzbDonkey.loadSettings = function() {
 
     return new Promise(function(resolve, reject) {
 
-        // Fall back to storage.local if storage.sync is not available
-        if (isset(() => chrome.storage.sync)) {
-            var storage = chrome.storage.sync;
-        }
-        else {
-            var storage = chrome.storage.local;
-        }
-        storage.get(null, function(obj) {
+        nzbDonkey.storage.get(null, function(obj) {
             for (key in obj) {
                 keys = key.split(".");
                 if (keys[0] == 'searchengines') {
-                    nzbDonkeySettings[keys[1]] = obj[key];
+                    nzbDonkey.settings[keys[1]] = obj[key];
                 } else {
-                    if (!isset(() => nzbDonkeySettings[keys[0]])) {
-                        nzbDonkeySettings[keys[0]] = {};
+                    if (!isset(() => nzbDonkey.settings[keys[0]])) {
+                        nzbDonkey.settings[keys[0]] = {};
                     }
-                    nzbDonkeySettings[keys[0]][keys[1]] = obj[key];
+                    nzbDonkey.settings[keys[0]][keys[1]] = obj[key];
                 }
             }
             nzbDonkey.logging("settings successfully loaded");
@@ -157,8 +264,149 @@ nzbDonkey.settingsError = function() {
 
 }
 
-// backbone function of the script
-// to be called as soon as we have all information to start searching
+// function to set up interception of nzb file downloads
+nzbDonkey.setupNzbDownloadInterception = function() {
+
+    return new Promise(function(resolve, reject) {
+        
+        // declare global nzbDonkey variable to store the requests information
+        nzbDonkey.ownRequestIDs = [];
+        nzbDonkey.allRequestIDs = [];
+        
+        // generate the array of domains to  be intercepted
+        var Domains = [];
+        if (isset(() => nzbDonkey.settings.interception.domains) && nzbDonkey.settings.interception.domains.length > 0) {
+            for (var i = 0; i < nzbDonkey.settings.interception.domains.length; i++) {
+                if (nzbDonkey.settings.interception.domains[i].active) {
+                    Domains.push("*://*." + nzbDonkey.settings.interception.domains[i].domain + "/*");
+                }
+            }
+        }
+
+        // generate the special domains object
+        nzbDonkey.specialDomains = {};
+        if (isset(() => nzbDonkey.settings.interception.specialDomains) && nzbDonkey.settings.interception.specialDomains.length > 0) {
+            for (var i = 0; i < nzbDonkey.settings.interception.specialDomains.length; i++) {
+                nzbDonkey.specialDomains[nzbDonkey.settings.interception.specialDomains[i].domain] = nzbDonkey.settings.interception.specialDomains[i].treatment;
+            }
+        }
+
+        // setting the event listener to intercept nzb file downloads
+        nzbDonkey.logging("setting event listener for the onHeadersReceived event");
+        chrome.webRequest.onHeadersReceived.addListener(nzbDonkey.onHeadersReceivedEventListener, {urls: Domains}, ['responseHeaders','blocking']);
+
+        // setting the event listener for all requests to get the request url and form data to be used upon interception
+        nzbDonkey.logging("setting event listener for the onBeforeRequest event");
+        chrome.webRequest.onBeforeRequest.addListener(nzbDonkey.onBeforeRequestEventListener, {urls: Domains}, ['requestBody']);
+
+        // setting the event listener for the X-NZBDonkey requests to get those request IDs to exclude them from being intercepted
+        nzbDonkey.logging("setting event listener for the onBeforeSendHeaders event");
+        chrome.webRequest.onBeforeSendHeaders.addListener(nzbDonkey.onBeforeSendHeadersEventListener, {urls: Domains}, ['requestHeaders']);
+        
+        resolve();
+        
+    });
+
+}
+
+// function to handle the onHeadersReceived event
+nzbDonkey.onHeadersReceivedEventListener = function(details){
+    // first check if it is not one of our own requests
+    if (!nzbDonkey.ownRequestIDs.includes(details.requestId)) {
+        // get the headers
+        var headers = details.responseHeaders;
+        // loop through the headers 
+        for (header of headers) {
+            // check for header "Content-Disposition"
+            if (/^content-disposition$/i.test(header.name)) {
+                // check if header "Content-Disposition" contains a filename ending with .nzb
+                if (/filename\s*=\s*"?((.*)\.nzb)"?/i.test(header.value)) {
+                    // if yes, we have a hit and will intercept this download
+                    var nzb = {};
+                    // get the filename as title
+                    nzb.title = header.value.match(/filename\s*=\s*"?((.*)\.nzb)"?/i)[2];
+                    nzbDonkey.logging("found a nzb filename in the intercepted response header: " + nzb.title);
+                    // chekc if the filename contains the password in {{}}
+                    if (/^(.*){{(.*?)}}/m.test(nzb.title)) {
+                        // if yes, set the password
+                        nzb.password = nzb.title.match(/^(.*){{(.*?)}}/m)[2];
+                        // and the title without the password
+                        nzb.title = nzb.title.match(/^(.*){{(.*?)}}/m)[1];
+                    }
+                    else {
+                        // if not set the password to empty anyway to avoid undefined errors
+                        nzb.password = "";
+                    }
+                    // get the request url for this nzb file
+                    nzb.url = nzbDonkey.allRequestIDs[details.requestId].url;
+                    // check if there is some formData for this request
+                    if (isset(() => nzbDonkey.allRequestIDs[details.requestId].formData) && typeof nzbDonkey.allRequestIDs[details.requestId].formData == "object"){
+                        nzbDonkey.logging("found post form data for intercepted nzb file request");
+                        // check if the domain needs special handling for the form data
+                        var url = analyzeURL(nzb.url);
+                        if (isset(() => nzbDonkey.specialDomains[url.basedomain])) {
+                            switch(nzbDonkey.specialDomains[url.basedomain]) {
+                                case "sendFormDataAsString": 
+                                    nzbDonkey.logging(url.basedomain + ": " + "this domain requires special handling sendFormDataAsString");
+                                    var formData = "";
+                                    for (let key in nzbDonkey.allRequestIDs[details.requestId].formData) {
+                                        if (isset(() => nzbDonkey.allRequestIDs[details.requestId].formData[key][0])) {
+                                            formData += key + "=" + nzbDonkey.allRequestIDs[details.requestId].formData[key][0] + "&";
+                                        }
+                                    }
+                                    nzb.formData = formData.replace(/\&$/i, "");
+                                    break;
+                            }
+                        }
+                        // if no special handling is needed, just generate the form data
+                        else {
+                            nzb.formData = generateFormData(nzbDonkey.allRequestIDs[details.requestId].formData);
+                        }
+                    }
+                    // calling the function to take over the nzb file download
+                    nzbDonkey.interceptNzbDownload(nzb);
+
+                    // aborting original request
+                    return{redirectUrl:"javascript:"};
+                }
+            }
+        }
+    }
+}
+
+// function to handle the onBeforeRequest event
+nzbDonkey.onBeforeRequestEventListener = function(details) {
+    nzbDonkey.allRequestIDs[details.requestId] = {};
+    // get the url of this request
+    nzbDonkey.allRequestIDs[details.requestId].url = details.url;
+    // check if there is a request body
+    if (typeof details.requestBody == "object") {
+        // check if the request body contains form data
+        if (typeof details.requestBody.formData == "object") {
+            // get the form data of this request
+            nzbDonkey.allRequestIDs[details.requestId].formData = details.requestBody.formData;
+        }
+    }
+    return;
+}
+
+// function to handle the onBeforeSendHeaders event
+nzbDonkey.onBeforeSendHeadersEventListener = function(details) {
+    // get the headers of this request
+    var headers = details.requestHeaders;
+    // loop through the headers
+    for (header of headers) {
+        // if header name is X-NZBDonkey
+        if (/^x-nzbdonkey$/i.test(header.name)) {
+            // add request ID to the own requests ids 
+            nzbDonkey.ownRequestIDs.push(details.requestId);
+        }
+    }
+    return;
+}
+
+// main backbone function of the script for nzb file search
+// to be called as soon as we have all information to start searching for the nzb files
 nzbDonkey.doTheDonkey = function(nzb) {
     nzbDonkey.notification("Starting to search for" + " " + nzb.title, "info");
     nzbDonkey.searchNZB(nzb).then(function(response) {
@@ -168,12 +416,41 @@ nzbDonkey.doTheDonkey = function(nzb) {
     }).then(function(response) {
         return nzbDonkey.processNZBfile(response);
     }).then(function(response) {
-        return nzbDonkey.execute[nzbDonkeySettings.general.execType](response);
+        return nzbDonkey.execute[nzbDonkey.settings.general.execType](response);
     }).then(function(response) {
         nzbDonkey.notification(response, "success");
     }).catch(function(e) {
         nzbDonkey.notification(e.toString(), "error");
         nzbDonkey.logging(e, true);
+    });    
+}
+
+// main backbone function of the script for the nzb file download interception
+// to be called as soon as we have all information to take over the nzb file download
+nzbDonkey.interceptNzbDownload = function(nzb) {
+    nzbDonkey.notification("Intercepting download of" + " " + nzb.title + ".nzb", "info");
+    var options = {
+                    "url": nzb.url,
+                    "responseType": "text",
+                    "timeout": 120000,
+                    "data": nzb.formData
+                };
+    nzbDonkey.xhr(options).then(function(response) {
+        return Promise.all([nzbDonkey.checkNZBfile(response, false), response]);
+    }).then(function(response) {
+        nzb.file = response[1];
+        return nzbDonkey.processTitle(nzb);
+    }).then(function(response) {
+        return nzbDonkey.categorize(response);
+    }).then(function(response) {
+        return nzbDonkey.processNZBfile(response);
+    }).then(function(response) {
+        return nzbDonkey.execute[nzbDonkey.settings.general.execType](response);
+    }).then(function(response) {
+        nzbDonkey.notification(response, "success");
+    }).catch(function(e) {
+        nzbDonkey.notification(e.toString(), "error");
+        console.error(e);
     });    
 }
 
@@ -209,33 +486,30 @@ nzbDonkey.processAnalysedSelection = function(nzb) {
 }
 
 // function to process the clicked link
-nzbDonkey.processLink = function(url) {
+nzbDonkey.processLink = function(nzblnk) {
 
-    nzbDonkey.logging("processing clicked link" + ": " + url);
+    nzbDonkey.logging("processing clicked link" + ": " + nzblnk);
 
     return new Promise(function(resolve, reject) {
- 
-        if (url.match(/^nzblnk:/i)) {
-            var query = url.match(/^(([^:/?#]+):)?(\/{0,2}([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/)[7].match(/[^&;=]*=[^&;=]*/g);;
-            if (isset(() => query.length) && query.length > 0) {
-                var parameters = {};
-                for (var i = 0; i < query.length; i++) {
-                    parameters[decodeURIComponent(query[i].match(/([^=]*)=/)[1])] = query[i].match(/=([^=]*)/)[1] ;
-                }
+
+        var url = analyzeURL(nzblnk);
+        if (isset(() => url.scheme) && url.scheme == "nzblnk") {
+            alert(JSON.stringify(url, null, 4));
+            if (isset(() => url.parameters)) {
                 var nzb = {};
-                if (isset(() => parameters.h) && parameters.h !="") {
-                    nzb.header = decodeURIComponent(parameters.h);
+                if (isset(() => url.parameters.h) && url.parameters.h !="") {
+                    nzb.header = url.parameters.h;
                     nzbDonkey.logging("found header parameter" + ": " + nzb.header);
-                    if (isset(() => parameters.t) && parameters.t !="") {
-                        nzb.title = decodeURIComponent(parameters.t.replace(/\+/g, " "));
+                    if (isset(() => url.parameters.t) && url.parameters.t !="") {
+                        nzb.title = url.parameters.t;
                         nzbDonkey.logging("found title parameter" + ": " + nzb.title);
                     } else {
                         nzbDonkey.logging("no title parameter found");
                         nzb.title = nzb.header;
                         nzbDonkey.logging("setting header as title parameter");
                     }
-                    if (isset(() => parameters.p) && parameters.p !="") {
-                        nzb.password = decodeURIComponent(parameters.p);
+                    if (isset(() => url.parameters.p) && url.parameters.p !="") {
+                        nzb.password = url.parameters.p;
                         nzbDonkey.logging("found password parameter" + ": " + nzb.password);
                     } else {
                         nzb.password = ""; // define nzb.password even if empty to avoid "undefined" errors
@@ -266,14 +540,14 @@ nzbDonkey.searchNZB = function(nzb) {
 
     // prepare the promises for all search engines
     var getNZB = []; // the promise array
-    for (let i = 0; i < nzbDonkeySettings.searchengines.length; i++) {
-        if (nzbDonkeySettings.searchengines[i].active) { // only use "active" search engines
+    for (let i = 0; i < nzbDonkey.settings.searchengines.length; i++) {
+        if (nzbDonkey.settings.searchengines[i].active) { // only use "active" search engines
             getNZB[i] = new Promise(function(resolve, reject) {
 
                 // first search for the nzb header
-                let nzbSearchURL = nzbDonkeySettings.searchengines[i].searchURL.replace(/%s/, encodeURI(nzb.header));
-                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "the search url is" + ": " + nzbSearchURL);
-                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "searching for the nzb file");
+                let nzbSearchURL = nzbDonkey.settings.searchengines[i].searchURL.replace(/%s/, encodeURI(nzb.header));
+                nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the search url is" + ": " + nzbSearchURL);
+                nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "searching for the nzb file");
                 let options = {
                     "url": nzbSearchURL,
                     "responseType": "text",
@@ -281,16 +555,16 @@ nzbDonkey.searchNZB = function(nzb) {
                 };
                 nzbDonkey.xhr(options).then(function(response) {
                     // if we have a response, check if we have a result
-                    let re = new RegExp(nzbDonkeySettings.searchengines[i].searchPattern, "i");
-                    nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "the search engine returned a results page");
-                    nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "search pattern is set to: " + nzbDonkeySettings.searchengines[i].searchPattern);
-                    nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "searching for a result in the results page");
+                    let re = new RegExp(nzbDonkey.settings.searchengines[i].searchPattern, "i");
+                    nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the search engine returned a results page");
+                    nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "search pattern is set to: " + nzbDonkey.settings.searchengines[i].searchPattern);
+                    nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "searching for a result in the results page");
                     if (re.test(response)) {
                         // if we have a result, generate the url for the nzb file
-                        nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "nzb file found");
-                        let nzbDownloadURL = nzbDonkeySettings.searchengines[i].downloadURL.replace(/%s/, response.match(re)[nzbDonkeySettings.searchengines[i].searchGroup]);
-                        nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "the nzb file download url is" + ": " + nzbDownloadURL);
-                        nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "trying to download the nzb file");
+                        nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "nzb file found");
+                        let nzbDownloadURL = nzbDonkey.settings.searchengines[i].downloadURL.replace(/%s/, response.match(re)[nzbDonkey.settings.searchengines[i].searchGroup]);
+                        nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the nzb file download url is" + ": " + nzbDownloadURL);
+                        nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "trying to download the nzb file");
                         // and download the nzb file
                         let options = {
                             "url": nzbDownloadURL,
@@ -299,31 +573,31 @@ nzbDonkey.searchNZB = function(nzb) {
                         };
                         nzbDonkey.xhr(options).then(function(response) {
                             // if we have a response, check if it is a nzb file and if it is complete
-                            nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "checking if nzb file is valid and complete");
+                            nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "checking if nzb file is valid and complete");
                             nzbDonkey.checkNZBfile(response).then(function(result) {
-                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "the nzb file seems to be complete");
-                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "files: [" + result.totalFiles + "/" + result.expectedFiles + "] / segments: (" + result.totalSegments + "/" + result.expectedSegments + ")" );
+                                nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the nzb file seems to be complete");
+                                nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "files: [" + result.totalFiles + "/" + result.expectedFiles + "] / segments: (" + result.totalSegments + "/" + result.expectedSegments + ")" );
                                 resolve(response);
                             }).catch(function(e){
-                                nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + e.toString(), true);
+                                nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + e.toString(), true);
                                 reject(e);
                             });
                         }).catch(function(e) {
                             // if the download failed, reject
-                            nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "an error occurred while trying to download the nzb file", true);
+                            nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "an error occurred while trying to download the nzb file", true);
                             nzbDonkey.logging(e.toString(), true);
-                            reject(new Error(nzbDonkeySettings.searchengines[i].name + ": " + "an error occurred while trying to download the nzb file"));
+                            reject(new Error(nzbDonkey.settings.searchengines[i].name + ": " + "an error occurred while trying to download the nzb file"));
                         });
                     } else {
                         // if we have no result, reject
-                        nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "no nzb file found", true);
-                        reject(new Error(nzbDonkeySettings.searchengines[i].name + ": " + "no nzb file found"));
+                        nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "no nzb file found", true);
+                        reject(new Error(nzbDonkey.settings.searchengines[i].name + ": " + "no nzb file found"));
                     }
                 }).catch(function(e) {
                     // if we have no response, reject
-                    nzbDonkey.logging(nzbDonkeySettings.searchengines[i].name + ": " + "an error occurred while searching for the nzb file", true);
+                    nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "an error occurred while searching for the nzb file", true);
                     nzbDonkey.logging(e.toString(), true);
-                    reject(new Error(nzbDonkeySettings.searchengines[i].name + ": " + "an error occurred while searching for the nzb file"));
+                    reject(new Error(nzbDonkey.settings.searchengines[i].name + ": " + "an error occurred while searching for the nzb file"));
                 });
 
             });
@@ -356,22 +630,22 @@ nzbDonkey.testconnection.nzbget = function() {
     return new Promise(function(resolve, reject) {
 
         chrome.cookies.getAll({
-            domain: nzbDonkeySettings.nzbget.host
+            domain: nzbDonkey.settings.nzbget.host
         }, function(cookies) {
             // first remove all cookies set by NZBGet to get a real test if connection is possible
             for (var i = 0; i < cookies.length; i++) {
                 chrome.cookies.remove({
-                    url: nzbDonkeySettings.nzbget.scheme + "://" + nzbDonkeySettings.nzbget.host + cookies[i].path,
+                    url: nzbDonkey.settings.nzbget.scheme + "://" + nzbDonkey.settings.nzbget.host + cookies[i].path,
                     name: cookies[i].name
                 });
             }
 
             var options = {
-                "scheme": nzbDonkeySettings.nzbget.scheme,
-                "host": nzbDonkeySettings.nzbget.host,
-                "port": nzbDonkeySettings.nzbget.port,
-                "username": nzbDonkeySettings.nzbget.username,
-                "password": nzbDonkeySettings.nzbget.password,
+                "scheme": nzbDonkey.settings.nzbget.scheme,
+                "host": nzbDonkey.settings.nzbget.host,
+                "port": nzbDonkey.settings.nzbget.port,
+                "username": nzbDonkey.settings.nzbget.username,
+                "password": nzbDonkey.settings.nzbget.password,
                 "basepath": "jsonrpc/",
                 "responseType": "text",
                 "timeout": 5000
@@ -410,22 +684,22 @@ nzbDonkey.execute.nzbget = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         var options = {
-            "scheme": nzbDonkeySettings.nzbget.scheme,
-            "host": nzbDonkeySettings.nzbget.host,
-            "port": nzbDonkeySettings.nzbget.port,
-            "username": nzbDonkeySettings.nzbget.username,
-            "password": nzbDonkeySettings.nzbget.password,
+            "scheme": nzbDonkey.settings.nzbget.scheme,
+            "host": nzbDonkey.settings.nzbget.host,
+            "port": nzbDonkey.settings.nzbget.port,
+            "username": nzbDonkey.settings.nzbget.username,
+            "password": nzbDonkey.settings.nzbget.password,
             "basepath": "jsonrpc/",
             "responseType": "text",
             "timeout": 120000
         };
         var params = [
             nzb.title, // Filename
-            nzbDonkey.b64EncodeUnicode(nzb.file), // Content (NZB File)
+            b64EncodeUnicode(nzb.file), // Content (NZB File)
             nzb.category, // Category
             0, // Priority
             false, // AddToTop
-            nzbDonkeySettings.nzbget.addPaused, // AddPaused
+            nzbDonkey.settings.nzbget.addPaused, // AddPaused
             "", // DupeKey
             0, // DupeScore
             "Force", // DupeMode
@@ -467,9 +741,9 @@ nzbDonkey.testconnection.sabnzbd = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         var options = {
-            "scheme": nzbDonkeySettings.sabnzbd.scheme,
-            "host": nzbDonkeySettings.sabnzbd.host,
-            "port": nzbDonkeySettings.sabnzbd.port,
+            "scheme": nzbDonkey.settings.sabnzbd.scheme,
+            "host": nzbDonkey.settings.sabnzbd.host,
+            "port": nzbDonkey.settings.sabnzbd.port,
             "basepath": "sabnzbd/",
             "path": "api",
             "responseType": "text",
@@ -478,7 +752,7 @@ nzbDonkey.testconnection.sabnzbd = function(nzb) {
         var formData = new FormData();
         formData.append("mode", "addurl");
         formData.append("output", "json");
-        formData.append("apikey", nzbDonkeySettings.sabnzbd.apiKey);
+        formData.append("apikey", nzbDonkey.settings.sabnzbd.apiKey);
         formData.append("name", "");
         options.data = formData;
         nzbDonkey.xhr(options).then(function(result) {
@@ -507,9 +781,9 @@ nzbDonkey.execute.sabnzbd = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         var options = {
-            "scheme": nzbDonkeySettings.sabnzbd.scheme,
-            "host": nzbDonkeySettings.sabnzbd.host,
-            "port": nzbDonkeySettings.sabnzbd.port,
+            "scheme": nzbDonkey.settings.sabnzbd.scheme,
+            "host": nzbDonkey.settings.sabnzbd.host,
+            "port": nzbDonkey.settings.sabnzbd.port,
             "basepath": "sabnzbd/",
             "path": "api",
             "responseType": "text",
@@ -522,11 +796,11 @@ nzbDonkey.execute.sabnzbd = function(nzb) {
         if (isset(() => nzb.password) && nzb.password != "") {
             filename += "{{" + nzb.password + "}}";
         }
-        var addPaused = (nzbDonkeySettings.sabnzbd.addPaused) ? -2 : -100;
+        var addPaused = (nzbDonkey.settings.sabnzbd.addPaused) ? -2 : -100;
         var formData = new FormData();
         formData.append("mode", "addfile");
         formData.append("output", "json");
-        formData.append("apikey", nzbDonkeySettings.sabnzbd.apiKey);
+        formData.append("apikey", nzbDonkey.settings.sabnzbd.apiKey);
         formData.append("nzbname", filename);
         formData.append("cat", nzb.category);
         formData.append("priority", addPaused);
@@ -559,9 +833,9 @@ nzbDonkey.testconnection.synology = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         var options = {
-            "scheme": nzbDonkeySettings.synology.scheme,
-            "host": nzbDonkeySettings.synology.host,
-            "port": nzbDonkeySettings.synology.port,
+            "scheme": nzbDonkey.settings.synology.scheme,
+            "host": nzbDonkey.settings.synology.host,
+            "port": nzbDonkey.settings.synology.port,
             "basepath": "webapi/",
             "path": "query.cgi",
             "parameters": {
@@ -582,8 +856,8 @@ nzbDonkey.testconnection.synology = function(nzb) {
                     "api": "SYNO.API.Auth",
                     "version": SynoData.data['SYNO.API.Auth'].maxVersion,
                     "method": "login",
-                    "account": nzbDonkeySettings.synology.username,
-                    "passwd": nzbDonkeySettings.synology.password,
+                    "account": nzbDonkey.settings.synology.username,
+                    "passwd": nzbDonkey.settings.synology.password,
                     "session": (~~(Math.random() * 1e9)).toString(36),
                     "format": "cookie"
                 };
@@ -617,9 +891,9 @@ nzbDonkey.execute.synology = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         var options = {
-            "scheme": nzbDonkeySettings.synology.scheme,
-            "host": nzbDonkeySettings.synology.host,
-            "port": nzbDonkeySettings.synology.port,
+            "scheme": nzbDonkey.settings.synology.scheme,
+            "host": nzbDonkey.settings.synology.host,
+            "port": nzbDonkey.settings.synology.port,
             "basepath": "webapi/",
             "path": "query.cgi",
             "parameters": {
@@ -640,8 +914,8 @@ nzbDonkey.execute.synology = function(nzb) {
                     "api": "SYNO.API.Auth",
                     "version": SynoData.data['SYNO.API.Auth'].maxVersion,
                     "method": "login",
-                    "account": nzbDonkeySettings.synology.username,
-                    "passwd": nzbDonkeySettings.synology.password,
+                    "account": nzbDonkey.settings.synology.username,
+                    "passwd": nzbDonkey.settings.synology.password,
                     "session": (~~(Math.random() * 1e9)).toString(36),
                     "format": "cookie"
                 };
@@ -703,10 +977,10 @@ nzbDonkey.execute.download = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         var filename = ""
-        if (nzbDonkeySettings.download.defaultPath != "") {
-            filename += nzbDonkeySettings.download.defaultPath.replace(/^[\/]*(.*)[\/]*$/, '$1') + "/";
+        if (nzbDonkey.settings.download.defaultPath != "") {
+            filename += nzbDonkey.settings.download.defaultPath.replace(/^[\/]*(.*)[\/]*$/, '$1') + "/";
         }
-        if (isset(() => nzb.category) && nzb.category != "" && nzbDonkeySettings.download.categoryFolder) {
+        if (isset(() => nzb.category) && nzb.category != "" && nzbDonkey.settings.download.categoryFolder) {
             // sanitize category
             var category = nzb.category.replace(/[/\\?%*:|"<>\r\n\t\0\v\f\u200B]/g, "");
             filename += category + "/";
@@ -728,7 +1002,7 @@ nzbDonkey.execute.download = function(nzb) {
         chrome.downloads.download({
             url: URL.createObjectURL(blob),
             filename: filename,
-            saveAs: nzbDonkeySettings.download.saveAs,
+            saveAs: nzbDonkey.settings.download.saveAs,
             conflictAction: "uniquify"
         }, function(id) {
             if (typeof id == "undefined") {
@@ -785,7 +1059,7 @@ nzbDonkey.processTitle = function(nzb) {
         nzb.title = nzb.title.replace(/[/\\?%*:|"<>\r\n\t\0\v\f\u200B]/g, "");
 
         // convert periods to spaces or vice versa
-        switch (nzbDonkeySettings.general.processTitel) {
+        switch (nzbDonkey.settings.general.processTitel) {
             case "periods":
                 nzb.title = nzb.title.replace(/\s/g, ".");
                 break;
@@ -809,28 +1083,28 @@ nzbDonkey.categorize = function(nzb) {
     return new Promise(function(resolve, reject) {
 
         nzb.category = "";
-        switch (nzbDonkeySettings.category.categories) {
+        switch (nzbDonkey.settings.category.categories) {
             case "automatic":
                 nzbDonkey.logging("testing for automatic categories");
-                for (var i = 0; i < nzbDonkeySettings.category.automaticCategories.length; i++) {
-                    var re = new RegExp(nzbDonkeySettings.category.automaticCategories[i].pattern, "i");
-                    nzbDonkey.logging("testing for category " + nzbDonkeySettings.category.automaticCategories[i].name);
+                for (var i = 0; i < nzbDonkey.settings.category.automaticCategories.length; i++) {
+                    var re = new RegExp(nzbDonkey.settings.category.automaticCategories[i].pattern, "i");
+                    nzbDonkey.logging("testing for category " + nzbDonkey.settings.category.automaticCategories[i].name);
                     if (isset(() => nzb.title) && re.test(nzb.title)) {
-                        nzbDonkey.logging("match found while testing for category " + nzbDonkeySettings.category.automaticCategories[i].name);
-                        nzb.category = nzbDonkeySettings.category.automaticCategories[i].name;
+                        nzbDonkey.logging("match found while testing for category " + nzbDonkey.settings.category.automaticCategories[i].name);
+                        nzb.category = nzbDonkey.settings.category.automaticCategories[i].name;
                         break;
                     }
                 }
                 if (nzb.category == "") {
                     nzbDonkey.logging("testing for automatic categories did not match");
                     nzbDonkey.logging("setting category to default category");
-                    nzb.category = nzbDonkeySettings.category.defaultCategory;
+                    nzb.category = nzbDonkey.settings.category.defaultCategory;
                 }
                 break;
 
             case "default":
                 nzbDonkey.logging("setting category to default category");
-                nzb.category = nzbDonkeySettings.category.defaultCategory;
+                nzb.category = nzbDonkey.settings.category.defaultCategory;
                 break;
         }
         nzbDonkey.logging("category set to: " + nzb.category);
@@ -841,7 +1115,7 @@ nzbDonkey.categorize = function(nzb) {
 }
 
 // function to check the nzb file
-nzbDonkey.checkNZBfile = function(nzb) {
+nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
 
     return new Promise(function(resolve, reject) {
 
@@ -855,11 +1129,11 @@ nzbDonkey.checkNZBfile = function(nzb) {
             if (isset(() => nzbFile.nzb[0].file) && typeof nzbFile.nzb[0].file == "object") {
 
                 // if set in the settings, check for completeness
-                if (nzbDonkeySettings.general.checkNZBfiles) {
+                if (nzbDonkey.settings.general.checkNZBfiles && CompletenessCheck) {
                     
                     // Threshold value for missing files or segments for rejection
-                    var fileThreshold = nzbDonkeySettings.general.fileThreshold;
-                    var segmentThreshold = nzbDonkeySettings.general.segmentThreshold;
+                    var fileThreshold = nzbDonkey.settings.general.fileThreshold;
+                    var segmentThreshold = nzbDonkey.settings.general.segmentThreshold;
 
                     // RegExp for the expected amounts of files, expected amount of files is in capturing group 2
                     var reExpectedFiles = new RegExp('.*?[(\\[](\\d{1,4})\\/(\\d{1,4})[)\\]].*?\\((\\d{1,4})\\/(\\d{1,5})\\)', "i");
@@ -947,6 +1221,9 @@ nzbDonkey.checkNZBfile = function(nzb) {
                     }
 
                 }
+                else {
+                    resolve(true);
+                }
 
             }
             // if the nzb file does not contain any files, reject
@@ -1010,7 +1287,7 @@ nzbDonkey.processNZBfile = function(nzb) {
 
 // function for the console logging
 nzbDonkey.logging = function(loggingText, isError = false) {
-    if (nzbDonkeySettings.general.debug) {
+    if (nzbDonkey.settings.general.debug) {
         if (isError) {
             console.error("NZBDonkey - ERROR: " + loggingText);
         } else {
@@ -1021,7 +1298,7 @@ nzbDonkey.logging = function(loggingText, isError = false) {
 
 // function to show the desktop notification
 nzbDonkey.notification = function(message, type = "info") {
-    if (nzbDonkeySettings.general.showNotifications || type == "error") {
+    if (nzbDonkey.settings.general.showNotifications || type == "error") {
         var iconURL = {
             "info": "icons/NZBDonkey_128.png",
             "error": "icons/NZBDonkey_error_128.png",
@@ -1128,32 +1405,86 @@ nzbDonkey.xhr = function(options) {
         };
         request.open(method, url, true);
         if (options.username) {
-            request.setRequestHeader("Authorization", "Basic " + nzbDonkey.b64EncodeUnicode(options.username + ":" + options.password));
+            request.setRequestHeader("Authorization", "Basic " + b64EncodeUnicode(options.username + ":" + options.password));
         }
         request.timeout = options.timeout;
+        request.setRequestHeader("X-NZBDonkey", true)
         request.send(options.data);
 
     });
 
 }
 
+// actual start of the script
+// load the settings and initialize the script
+nzbDonkey.loadSettings().then(function() {
+    nzbDonkey.initializeScript().then(function() {
+        nzbDonkey.logging("the script was initialized successfully");
+    }).catch(function(e){
+        nzbDonkey.logging("the script failed to initialize", true);
+        nzbDonkey.logging(e, true);
+        nzbDonkey.notification("The script failed to initialize!\n" + e.toString() + "\nPlease restart the Browser.", "error");
+    });
+}).catch(function(e) {
+    nzbDonkey.settingsError();
+});
+
+/*------------------*/
+// helper functions //
+/*------------------*/
+
 // function for correct btoa encoding for utf8 strings
 // from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding 
-nzbDonkey.b64EncodeUnicode = function(str) {
+function b64EncodeUnicode(str) {
     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
         return String.fromCharCode(parseInt(p1, 16));
     }));
 }
 
-// modifiy the promise prototype to add function "any"
-// from https://stackoverflow.com/questions/39940152/get-first-fulfilled-promise
-Promise.prototype.invert = function() {
-    return new Promise((res, rej) => this.then(rej, res));
-};
-Promise.any = function(ps) {
-    return Promise.all(ps.map((p) => p.invert())).invert();
-};
+// function to analyze an URL
+function analyzeURL(u) {
+    var url = {};
+    url.scheme = decodeURIComponent(u.match(/^(([^:/?#]+):)?(\/{0,2}(([^/?#:]*)(:(\d*))?))?([^?#]*)(\?([^#]*))?(#(.*))?/)[2]);
+    url.domain = decodeURIComponent(u.match(/^(([^:/?#]+):)?(\/{0,2}(([^/?#:]*)(:(\d*))?))?([^?#]*)(\?([^#]*))?(#(.*))?/)[5]);
+    url.port = decodeURIComponent(u.match(/^(([^:/?#]+):)?(\/{0,2}(([^/?#:]*)(:(\d*))?))?([^?#]*)(\?([^#]*))?(#(.*))?/)[7]);
+    url.fullpath = decodeURIComponent(u.match(/^(([^:/?#]+):)?(\/{0,2}(([^/?#:]*)(:(\d*))?))?([^?#]*)(\?([^#]*))?(#(.*))?/)[8]);
+    url.basedomain = url.domain.match(/[^.]*\.[^.]*$/);
+    url.query = u.match(/^(([^:/?#]+):)?(\/{0,2}(([^/?#:]*)(:(\d*))?))?([^?#]*)(\?([^#]*))?(#(.*))?/)[10];
+    if (typeof url.query != "undefined") {
+        var parameter = [];
+        parameter = url.query.match(/[^&;=]*=[^&;=]*/g);
+        if (parameter.length > 0) {
+            url.parameters = {};
+            for (var i = 0; i < parameter.length; i++) {
+                url.parameters[decodeURIComponent(parameter[i].match(/([^=]*)=/)[1])] = decodeURIComponent(parameter[i].match(/=([^=]*)/)[1]) ;
+            }
+        }
+    }
+    return url;
+}
 
+// function to generate the form Data
+function generateFormData(data) {
+    var formData = new FormData;
+    if (typeof data == "object") {
+        for (var key in data) {
+            if (isset(() => data[key])) {
+                if (typeof data[key] != "object") {
+                    formData.append(key, data[key]);
+                }
+                else {
+                    formData.append(key, data[key][0]);
+                }
+            }
+        }
+        return formData;
+    }
+    else {
+        throw new Error("generateFormData: no object provided");
+    }
+}
+
+// error proof function to check if nested objects are set without throwing an error if parent object is undefined
 // from https://stackoverflow.com/questions/2281633/javascript-isset-equivalent/2281671
 // call it: isset(() => variable.to.be.checked)
 /**
