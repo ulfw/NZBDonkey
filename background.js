@@ -494,7 +494,6 @@ nzbDonkey.processLink = function(nzblnk) {
 
         var url = analyzeURL(nzblnk);
         if (isset(() => url.scheme) && url.scheme == "nzblnk") {
-            alert(JSON.stringify(url, null, 4));
             if (isset(() => url.parameters)) {
                 var nzb = {};
                 if (isset(() => url.parameters.h) && url.parameters.h !="") {
