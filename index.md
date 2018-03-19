@@ -36,7 +36,7 @@ If the title, header and password information is correct select "Get NZB file" a
 #### Best practice for text selection
 ![alt text](https://raw.githubusercontent.com/Tensai75/NZBDonkey/gh-pages/screenshots/text_selection_best_practice.jpg "Text selection best practice")
 1. Make sure the title information is in the first line of your seleced text. If no other title information was found, first line will autmatically become the title information.
-2. If the NZB filename information in the format "title{{password}}.nzb" is provided, make sure to include this information into your selected text. Title and password information will directly be extracted from this information.
+2. If the NZB filename information in the format "title{{"{{password"}}}}.nzb" is provided, make sure to include this information into your selected text. Title and password information will directly be extracted from this information.
 
 ## NZB file download interception
 Just add the domain of the website where you would like the download of NZB file to be handled with NZBDonkey to the list of domains in the "NZB download interception" settings page. NZBDonkey will then capture any NZB file download from this website.
