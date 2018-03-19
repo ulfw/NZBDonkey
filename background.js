@@ -746,12 +746,13 @@ nzbDonkey.testconnection.sabnzbd = function(nzb) {
             "responseType": "text",
             "timeout": 5000
         };
-        var formData = new FormData();
-        formData.append("mode", "addurl");
-        formData.append("output", "json");
-        formData.append("apikey", nzbDonkey.settings.sabnzbd.apiKey);
-        formData.append("name", "");
-        options.data = formData;
+        var formData = {
+            "mode": "addurl",
+            "output": "json",
+            "apikey": nzbDonkey.settings.sabnzbd.apiKey,
+            "name": ""
+        };
+        options.data = generateFormData(formData);
         nzbDonkey.xhr(options).then(function(result) {
             var response = JSON.parse(result);
             if (isset(() => response.status)) {
@@ -794,15 +795,16 @@ nzbDonkey.execute.sabnzbd = function(nzb) {
             filename += "{{" + nzb.password + "}}";
         }
         var addPaused = (nzbDonkey.settings.sabnzbd.addPaused) ? -2 : -100;
-        var formData = new FormData();
-        formData.append("mode", "addfile");
-        formData.append("output", "json");
-        formData.append("apikey", nzbDonkey.settings.sabnzbd.apiKey);
-        formData.append("nzbname", filename);
-        formData.append("cat", nzb.category);
-        formData.append("priority", addPaused);
-        formData.append("name", content, filename);
-        options.data = formData;
+        var formData = {
+            "mode": "addfile",
+            "output": "json",
+            "apikey": nzbDonkey.settings.sabnzbd.apiKey,
+            "nzbname": filename,
+            "cat": nzb.category,
+            "priority": addPaused,
+            "name": [content, filename]
+        };
+        options.data = generateFormData(formData);
         nzbDonkey.xhr(options).then(function(result) {
             var response = JSON.parse(result);
             if (isset(() => response.status)) {
@@ -928,20 +930,21 @@ nzbDonkey.execute.synology = function(nzb) {
                 var content = new Blob([nzb.file], {
                     type: "text/xml"
                 });
-                var formData = new FormData();
-                formData.append("api", "SYNO.DownloadStation2.Task");
-                formData.append("method", "create");
-                formData.append("version", SynoData.data['SYNO.DownloadStation2.Task'].maxVersion);
-                formData.append("type", "\"file\"");
-                formData.append("destination", "\"\"");
-                formData.append("create_list", false);
-                formData.append("mtime", Date.now());
-                formData.append("size", content.size);
-                formData.append("file", "[\"torrent\"]");
-                formData.append("extract_password", '"' + nzb.password + '"');
-                formData.append("_sid", SynoAuthData.data.sid);
-                formData.append("torrent", content, nzb.title + ".nzb");
-                options.data = formData;
+                var formData = {
+                    "api": "SYNO.DownloadStation2.Task",
+                    "method": "create",
+                    "version": SynoData.data['SYNO.DownloadStation2.Task'].maxVersion,
+                    "type": "\"file\"",
+                    "destination": "\"\"",
+                    "create_list": false,
+                    "mtime": Date.now(),
+                    "size": content.size,
+                    "file": "[\"torrent\"]",
+                    "extract_password": '"' + nzb.password + '"',
+                    "_sid": SynoAuthData.data.sid,
+                    "torrent": [content, nzb.title + ".nzb"]
+                }
+                options.data = generateFormData(formData);
                 options.timeout = 120000;
                 return nzbDonkey.xhr(options);
             } else {
@@ -1466,11 +1469,16 @@ function generateFormData(data) {
     if (typeof data == "object") {
         for (var key in data) {
             if (isset(() => data[key])) {
-                if (typeof data[key] != "object") {
-                    formData.append(key, data[key]);
+                if (Array.isArray(data[key])) {
+                    if (data[key].length == 1) {
+                        formData.append(key, data[key][0]);
+                    }
+                    else if (data[key].length == 2) {
+                        formData.append(key, data[key][0], data[key][1]);
+                    }
                 }
                 else {
-                    formData.append(key, data[key][0]);
+                    formData.append(key, data[key]);
                 }
             }
         }
