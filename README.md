@@ -32,13 +32,13 @@ Catching left mouse clicks on a NZBlnk link can be deactivated in the settings, 
 
 ### Header, password and title information provided as plain text
 If no NZBlnk link is provided, select title, header and password, then right click on the selected text and choose "Get NZB file".
-An overlay window will appear showing the extracted title, header and password. If automatic parsing of the selected text did not work correctly you can now manually enter or correct the title, header or password. For your convenient the selected text is shown as well to facilitate to copy and paste of the required information.
+An overlay window will appear showing the extracted title, header and password. If automatic parsing of the selected text did not work correctly you can now manually enter or correct the title, header or password. For your convenience the selected text is shown as well to facilitate to copy and paste the required information.
 If the title, header and password information is correct select "Get NZB file" and NZBDonkey will take over and search for the NZB file.
 
 ### NZB file download interception
-Just add the domain of the website where you would like the download of NZB file to be handled with NZBDonkey to the list of domains in the "NZB download interception" settings page. NZBDonkey will then capture any NZB file download from this website.
+Just add the domain of the web site where you would like the download of NZB file to be handled with NZBDonkey to the list of domains in the "NZB download interception" settings page. NZBDonkey will then capture any NZB file download from this web site.
 If there is always the error "this is not a valid nzb file" try to add the domain to the list of domains needing special treatment and choose from one of the special treatment options.
-If no special treatment option is working for this website please open an issue on github providing as much information about this website as possible.
+If no special treatment option is working for this web site please open an issue on github providing as much information about this web site as possible.
 
 ## Change log
 ### v0.5.1
