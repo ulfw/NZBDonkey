@@ -1,6 +1,6 @@
 // listen for the onInstalled event
 chrome.runtime.onInstalled.addListener(function(details) {
-    if (details.OnInstalledReason != 'chrome_update') {
+    if (details.OnInstalledReason !== 'chrome_update') {
         // delete the stored searchengines settings to force loading the default settings
         // currently not required because no changes to these default settings have been done
         // chrome.storage.sync.remove('searchengines.searchengines');
@@ -126,7 +126,7 @@ nzbDonkey.initializeScript = function() {
     
     });
 
-}
+};
 
 // function to reinitialize the script upon settings changes
 nzbDonkey.reinitializeScript = function(changes, area) {
@@ -140,10 +140,10 @@ nzbDonkey.reinitializeScript = function(changes, area) {
             nzbDonkey.notification("The script failed to reinitialize!\n" + e.toString() + "\nPlease restart the Browser.", "error");
         });
     }).catch(function(e) {
-        nzbDonkey.settingsError();
+        nzbDonkey.settingsError(e);
     });
 
-}
+};
 
 // function to set the event listener for clicks on the context menu
 nzbDonkey.contextMenuEventListener = function(info, tab) {
@@ -183,7 +183,7 @@ nzbDonkey.contextMenuEventListener = function(info, tab) {
         nzbDonkey.notification("NZBDonkey was started with a right click but neither on a link nor on a selection", "error");
     }
 
-}
+};
 
 // function to set the event listener for messages from the content or options script
 nzbDonkey.messageEventListener = function(request, sender, sendResponse) {
@@ -219,7 +219,7 @@ nzbDonkey.messageEventListener = function(request, sender, sendResponse) {
 
     return true;
 
-}
+};
 
 // function to load the settings
 nzbDonkey.loadSettings = function() {
@@ -229,9 +229,9 @@ nzbDonkey.loadSettings = function() {
     return new Promise(function(resolve, reject) {
 
         nzbDonkey.storage.get(null, function(obj) {
-            for (key in obj) {
-                keys = key.split(".");
-                if (keys[0] == 'searchengines') {
+            for (var key in obj) {
+                var keys = key.split(".");
+                if (keys[0] === 'searchengines') {
                     nzbDonkey.settings[keys[1]] = obj[key];
                 } else {
                     if (!isset(() => nzbDonkey.settings[keys[0]])) {
@@ -245,10 +245,10 @@ nzbDonkey.loadSettings = function() {
         });
 
     });
-}
+};
 
 // function to show a notification and log it to the console if loading of the settings failed 
-nzbDonkey.settingsError = function() {
+nzbDonkey.settingsError = function(e) {
 
     console.error("NZBDonkey - Error: could not load settings");
     console.error("NZBDonkey - " + e.toString());
@@ -260,7 +260,7 @@ nzbDonkey.settingsError = function() {
         message: "Error: could not load settings"
     });
 
-}
+};
 
 // function to set up interception of nzb file downloads
 nzbDonkey.setupNzbDownloadInterception = function() {
@@ -305,7 +305,7 @@ nzbDonkey.setupNzbDownloadInterception = function() {
         
     });
 
-}
+};
 
 // function to handle the onHeadersReceived event
 nzbDonkey.onHeadersReceivedEventListener = function(details){
@@ -314,7 +314,7 @@ nzbDonkey.onHeadersReceivedEventListener = function(details){
         // get the headers
         var headers = details.responseHeaders;
         // loop through the headers 
-        for (header of headers) {
+        for (var header of headers) {
             // check for header "Content-Disposition"
             if (/^content-disposition$/i.test(header.name)) {
                 // check if header "Content-Disposition" contains a filename ending with .nzb
@@ -338,7 +338,7 @@ nzbDonkey.onHeadersReceivedEventListener = function(details){
                     // get the request url for this nzb file
                     nzb.url = nzbDonkey.allRequestIDs[details.requestId].url;
                     // check if there is some formData for this request
-                    if (isset(() => nzbDonkey.allRequestIDs[details.requestId].formData) && typeof nzbDonkey.allRequestIDs[details.requestId].formData == "object"){
+                    if (isset(() => nzbDonkey.allRequestIDs[details.requestId].formData) && typeof nzbDonkey.allRequestIDs[details.requestId].formData === "object"){
                         nzbDonkey.logging("found post form data for intercepted nzb file request");
                         // check if the domain needs special handling for the form data
                         var url = analyzeURL(nzb.url);
@@ -370,7 +370,7 @@ nzbDonkey.onHeadersReceivedEventListener = function(details){
             }
         }
     }
-}
+};
 
 // function to handle the onBeforeRequest event
 nzbDonkey.onBeforeRequestEventListener = function(details) {
@@ -378,22 +378,22 @@ nzbDonkey.onBeforeRequestEventListener = function(details) {
     // get the url of this request
     nzbDonkey.allRequestIDs[details.requestId].url = details.url;
     // check if there is a request body
-    if (typeof details.requestBody == "object") {
+    if (typeof details.requestBody === "object") {
         // check if the request body contains form data
-        if (typeof details.requestBody.formData == "object") {
+        if (typeof details.requestBody.formData === "object") {
             // get the form data of this request
             nzbDonkey.allRequestIDs[details.requestId].formData = details.requestBody.formData;
         }
     }
     return;
-}
+};
 
 // function to handle the onBeforeSendHeaders event
 nzbDonkey.onBeforeSendHeadersEventListener = function(details) {
     // get the headers of this request
     var headers = details.requestHeaders;
     // loop through the headers
-    for (header of headers) {
+    for (var header of headers) {
         // if header name is X-NZBDonkey
         if (/^x-nzbdonkey$/i.test(header.name)) {
             // add request ID to the own requests ids 
@@ -401,7 +401,7 @@ nzbDonkey.onBeforeSendHeadersEventListener = function(details) {
         }
     }
     return;
-}
+};
 
 // main backbone function of the script for nzb file search
 // to be called as soon as we have all information to start searching for the nzb files
@@ -421,7 +421,7 @@ nzbDonkey.doTheDonkey = function(nzb) {
         nzbDonkey.notification(e.toString(), "error");
         nzbDonkey.logging(e, true);
     });    
-}
+};
 
 // main backbone function of the script for the nzb file download interception
 // to be called as soon as we have all information to take over the nzb file download
@@ -450,7 +450,7 @@ nzbDonkey.interceptNzbDownload = function(nzb) {
         nzbDonkey.notification(e.toString(), "error");
         console.error(e);
     });    
-}
+};
 
 // function to analyze the parameters passed from the content script
 nzbDonkey.processAnalysedSelection = function(nzb) {
@@ -459,16 +459,16 @@ nzbDonkey.processAnalysedSelection = function(nzb) {
 
     return new Promise(function(resolve, reject) {
 
-        if (isset(() => nzb.header) && nzb.header != "") {
+        if (isset(() => nzb.header) && nzb.header !== "") {
             nzbDonkey.logging("found header tag" + ": " + nzb.header);
-            if (isset(() => nzb.title) && nzb.title != "") {
+            if (isset(() => nzb.title) && nzb.title !== "") {
                 nzbDonkey.logging("found title tag" + ": " + nzb.title);
             } else {
                 nzbDonkey.logging("no title tag found");
                 nzb.title = nzb.header;
                 nzbDonkey.logging("setting header as title tag");
             }
-            if (isset(() => nzb.password) && nzb.password != "") {
+            if (isset(() => nzb.password) && nzb.password !== "") {
                 nzbDonkey.logging("found password tag" + ": " + nzb.password);
             } else {
                 nzbDonkey.logging("no password tag found");
@@ -481,7 +481,7 @@ nzbDonkey.processAnalysedSelection = function(nzb) {
 
     });
 
-}
+};
 
 // function to process the clicked link
 nzbDonkey.processLink = function(nzblnk) {
@@ -491,13 +491,13 @@ nzbDonkey.processLink = function(nzblnk) {
     return new Promise(function(resolve, reject) {
 
         var url = analyzeURL(nzblnk);
-        if (isset(() => url.scheme) && url.scheme == "nzblnk") {
+        if (isset(() => url.scheme) && url.scheme === "nzblnk") {
             if (isset(() => url.parameters)) {
                 var nzb = {};
-                if (isset(() => url.parameters.h) && url.parameters.h !="") {
+                if (isset(() => url.parameters.h) && url.parameters.h !== "") {
                     nzb.header = url.parameters.h;
                     nzbDonkey.logging("found header parameter" + ": " + nzb.header);
-                    if (isset(() => url.parameters.t) && url.parameters.t !="") {
+                    if (isset(() => url.parameters.t) && url.parameters.t !== "") {
                         nzb.title = url.parameters.t;
                         nzbDonkey.logging("found title parameter" + ": " + nzb.title);
                     } else {
@@ -505,7 +505,7 @@ nzbDonkey.processLink = function(nzblnk) {
                         nzb.title = nzb.header;
                         nzbDonkey.logging("setting header as title parameter");
                     }
-                    if (isset(() => url.parameters.p) && url.parameters.p !="") {
+                    if (isset(() => url.parameters.p) && url.parameters.p !== "") {
                         nzb.password = url.parameters.p;
                         nzbDonkey.logging("found password parameter" + ": " + nzb.password);
                     } else {
@@ -528,7 +528,7 @@ nzbDonkey.processLink = function(nzblnk) {
 
     });
 
-}
+};
 
 // function to search and download the nzb file
 nzbDonkey.searchNZB = function(nzb) {
@@ -617,7 +617,7 @@ nzbDonkey.searchNZB = function(nzb) {
 
     });
 
-}
+};
 
 // function to test the connection to NZBGet
 nzbDonkey.testconnection.nzbget = function() {
@@ -671,7 +671,7 @@ nzbDonkey.testconnection.nzbget = function() {
 
     });
 
-}
+};
 
 // function to push the nzb file to NZBGet
 nzbDonkey.execute.nzbget = function(nzb) {
@@ -728,7 +728,7 @@ nzbDonkey.execute.nzbget = function(nzb) {
 
     });
 
-}
+};
 
 // function to test the connection to SABnzbd
 nzbDonkey.testconnection.sabnzbd = function(nzb) {
@@ -769,7 +769,7 @@ nzbDonkey.testconnection.sabnzbd = function(nzb) {
 
     });
 
-}
+};
 
 // function to push the nzb file to SABnzbd
 nzbDonkey.execute.sabnzbd = function(nzb) {
@@ -791,7 +791,7 @@ nzbDonkey.execute.sabnzbd = function(nzb) {
             type: "text/xml"
         });
         var filename = nzb.title;
-        if (isset(() => nzb.password) && nzb.password != "") {
+        if (isset(() => nzb.password) && nzb.password !== "") {
             filename += "{{" + nzb.password + "}}";
         }
         var addPaused = (nzbDonkey.settings.sabnzbd.addPaused) ? -2 : -100;
@@ -822,7 +822,7 @@ nzbDonkey.execute.sabnzbd = function(nzb) {
 
     });
 
-}
+};
 
 // function to test the connection to Synology DownloadStation
 nzbDonkey.testconnection.synology = function(nzb) {
@@ -880,7 +880,7 @@ nzbDonkey.testconnection.synology = function(nzb) {
 
     });
 
-}
+};
 
 // function to push the nzb file to Synology DownloadStation
 nzbDonkey.execute.synology = function(nzb) {
@@ -943,7 +943,7 @@ nzbDonkey.execute.synology = function(nzb) {
                     "extract_password": '"' + nzb.password + '"',
                     "_sid": SynoAuthData.data.sid,
                     "torrent": [content, nzb.title + ".nzb"]
-                }
+                };
                 options.data = generateFormData(formData);
                 options.timeout = 120000;
                 return nzbDonkey.xhr(options);
@@ -967,7 +967,7 @@ nzbDonkey.execute.synology = function(nzb) {
 
     });
 
-}
+};
 
 // function to download the nzb file to the local file system
 nzbDonkey.execute.download = function(nzb) {
@@ -976,17 +976,17 @@ nzbDonkey.execute.download = function(nzb) {
 
     return new Promise(function(resolve, reject) {
 
-        var filename = ""
-        if (nzbDonkey.settings.download.defaultPath != "") {
+        var filename = "";
+        if (nzbDonkey.settings.download.defaultPath !== "") {
             filename += nzbDonkey.settings.download.defaultPath.replace(/^[\/]*(.*)[\/]*$/, '$1') + "/";
         }
-        if (isset(() => nzb.category) && nzb.category != "" && nzbDonkey.settings.download.categoryFolder) {
+        if (isset(() => nzb.category) && nzb.category !== "" && nzbDonkey.settings.download.categoryFolder) {
             // sanitize category
             var category = nzb.category.replace(/[/\\?%*:|"<>\r\n\t\0\v\f\u200B]/g, "");
             filename += category + "/";
         }
         filename += nzb.title;
-        if (isset(() => nzb.password) && nzb.password != "") {
+        if (isset(() => nzb.password) && nzb.password !== "") {
             if (!/[\/\\%*:"?~<>*|]/.test(nzb.password)) {
                 filename += "{{" + nzb.password + "}}";
             } else {
@@ -998,14 +998,14 @@ nzbDonkey.execute.download = function(nzb) {
         nzbDonkey.logging("filename is set to" + ": " + filename);
         var blob = new Blob([nzb.file], {
             type: "text/xml;charset=utf-8"
-        })
+        });
         chrome.downloads.download({
             url: URL.createObjectURL(blob),
             filename: filename,
             saveAs: nzbDonkey.settings.download.saveAs,
             conflictAction: "uniquify"
         }, function(id) {
-            if (typeof id == "undefined") {
+            if (typeof id === "undefined") {
                 nzbDonkey.logging("failed to initiate the download");
                 reject(new Error(chrome.runtime.lastError.message));
             }
@@ -1016,7 +1016,7 @@ nzbDonkey.execute.download = function(nzb) {
         });
         chrome.downloads.onChanged.addListener(function(details) {
             if (isset(() => details.state.current)) {
-                if (details.state.current == "complete") {
+                if (details.state.current === "complete") {
                     nzbDonkey.logging("download completed");
                     var notificationString = "The nzb file was successfully downloaded to:" + " " + filename;
                     if (isset(() => passwordWarning)) {
@@ -1024,7 +1024,7 @@ nzbDonkey.execute.download = function(nzb) {
                     }
                     resolve(notificationString);
                 }
-                else if (details.state.current == "interrupted") {
+                else if (details.state.current === "interrupted") {
                     if (isset(() => details.error.current)) {
                         if (details.error.current.match(/^user/i)) {
                             nzbDonkey.logging("download canceled by the user");
@@ -1046,7 +1046,7 @@ nzbDonkey.execute.download = function(nzb) {
 
     });
 
-}
+};
 
 // function to process the nzb title
 nzbDonkey.processTitle = function(nzb) {
@@ -1073,7 +1073,7 @@ nzbDonkey.processTitle = function(nzb) {
 
     });
 
-}
+};
 
 // function to set the category
 nzbDonkey.categorize = function(nzb) {
@@ -1095,7 +1095,7 @@ nzbDonkey.categorize = function(nzb) {
                         break;
                     }
                 }
-                if (nzb.category == "") {
+                if (nzb.category === "") {
                     nzbDonkey.logging("testing for automatic categories did not match");
                     nzbDonkey.logging("setting category to default category");
                     nzb.category = nzbDonkey.settings.category.defaultCategory;
@@ -1112,7 +1112,7 @@ nzbDonkey.categorize = function(nzb) {
 
     });
 
-}
+};
 
 // function to check the nzb file
 nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
@@ -1124,9 +1124,9 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
         var nzbFile = xmlToJSON.parseString(nzb);
 
         // check if it is actually a nzb file
-        if (isset(() => nzbFile.nzb) && typeof nzbFile.nzb == "object") {
+        if (isset(() => nzbFile.nzb) && typeof nzbFile.nzb === "object") {
             // if yes, check if it does contain files
-            if (isset(() => nzbFile.nzb[0].file) && typeof nzbFile.nzb[0].file == "object") {
+            if (isset(() => nzbFile.nzb[0].file) && typeof nzbFile.nzb[0].file === "object") {
 
                 // if set in the settings, check for completeness
                 if (nzbDonkey.settings.general.checkNZBfiles && CompletenessCheck) {
@@ -1146,6 +1146,7 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
 
                     var totalSegments = 0;
                     var expectedSegments = 0;
+                    var expectedSegmentsPerFile = 0;
 
                     // get the amount of files
                     totalFiles = nzbFile.nzb[0].file.length;
@@ -1154,7 +1155,7 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
                     for (let file of nzbFile.nzb[0].file) {
                         // check if the file subject contains the expected amount of files
                         // if not, the expectedFiles counter will remain 0
-                        if (isset(() => file._attr.subject._value) && file._attr.subject._value != "") {
+                        if (isset(() => file._attr.subject._value) && file._attr.subject._value !== "") {
                             if (reExpectedFiles.test(file._attr.subject._value)) {
                                 // check if the found expected amount of files is bigger than an already found one
                                 // like this the highest number will be used e.g. in cases when an uploader subsequently has added more files
@@ -1164,7 +1165,8 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
                                 }
                             }
 
-                            var expectedSegmentsPerFile = 0; 
+                            // reset expectedSegmentsPerFile
+                            expectedSegmentsPerFile = 0; 
 
                             // check if the file subject contains the expected amount of segments for this file
                             if (reExpectedSegments.test(file._attr.subject._value)) {
@@ -1174,9 +1176,9 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
                             else {
                                 // if not, we loop through the segments and get the highest number from the number attribute
                                 // this is not very accurate but still in some cases might give an indication for missing segments
-                                if (file.segments[0].segment == "object") {
-                                    for (segment of file.segments[0].segment) {
-                                        if (isset(() => segment._attr.number._value) && segment._attr.number._value != "") {
+                                if (file.segments[0].segment === "object") {
+                                    for (var segment of file.segments[0].segment) {
+                                        if (isset(() => segment._attr.number._value) && segment._attr.number._value !== "") {
                                             if (Number(segment._attr.number._value) > expectedSegmentsPerFile) {
                                                 expectedSegmentsPerFile = Number(segment._attr.number._value);
                                             }
@@ -1187,7 +1189,7 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
                         }
 
                         // add the segments of this file to the total amount of segments
-                        if (isset(() => file.segments[0].segment) && typeof file.segments[0].segment == "object") {
+                        if (isset(() => file.segments[0].segment) && typeof file.segments[0].segment === "object") {
                             totalSegments += file.segments[0].segment.length;
                         }
 
@@ -1212,7 +1214,7 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
                             var missingFiles = expectedFiles - totalFiles;
                             reject(new Error("the nzb file is incomplete with" + " " + missingFiles + " " + "missing files"));
                         }
-                        else if (totalSegments < expectedSegments * (1 - segmentsThreshold)) {
+                        else if (totalSegments < expectedSegments * (1 - segmentThreshold)) {
                             var missingSegments = expectedSegments - totalSegments;
                             var missingSegmentsPercent = Math.round((missingSegments / expectedSegments * 100)*100)/100;
                             reject(new Error("the nzb file is incomplete with" + " " + missingSegments + " (" + missingSegmentsPercent + "%) " + "missing segments"));
@@ -1238,7 +1240,7 @@ nzbDonkey.checkNZBfile = function(nzb, CompletenessCheck = true) {
 
     });
 
-}
+};
 
 // function to process the nzb file
 nzbDonkey.processNZBfile = function(nzb) {
@@ -1249,7 +1251,7 @@ nzbDonkey.processNZBfile = function(nzb) {
 
         // add the meta data to the nzb file
         var nzbMetadata = '';
-        if (isset(() => nzb.title) && nzb.title != "") {
+        if (isset(() => nzb.title) && nzb.title !== "") {
             if (!nzb.title.match(/[&"\'<>]/)) {
                 nzbMetadata += '\t<meta type="title">' + nzb.title + '</meta>\n';
                 nzbDonkey.logging("nzb file meta data: title tag set to: " + nzb.title);
@@ -1257,7 +1259,7 @@ nzbDonkey.processNZBfile = function(nzb) {
                 nzbDonkey.logging("nzb file meta data: could not set title tag due to invalid characters");
             }
         }
-        if (isset(() => nzb.password) && nzb.password != "") {
+        if (isset(() => nzb.password) && nzb.password !== "") {
             if (!nzb.password.match(/[&"\'<>]/)) {
                 nzbMetadata += '\t<meta type="password">' + nzb.password + '</meta>\n';
                 nzbDonkey.logging("nzb file meta data: password tag set to: " + nzb.password);
@@ -1265,7 +1267,7 @@ nzbDonkey.processNZBfile = function(nzb) {
                 nzbDonkey.logging("nzb file meta data: could not set password tag due to invalid characters");
             }
         }
-        if (isset(() => nzb.category) && nzb.category != "") {
+        if (isset(() => nzb.category) && nzb.category !== "") {
             if (!nzb.category.match(/[&"\'<>]/)) {
                 nzbMetadata += '\t<meta type="category">' + nzb.category + '</meta>\n';
                 nzbDonkey.logging("nzb file meta data: category tag set to: " + nzb.category);
@@ -1283,7 +1285,7 @@ nzbDonkey.processNZBfile = function(nzb) {
 
     });
 
-}
+};
 
 // function for the console logging
 nzbDonkey.logging = function(loggingText, isError = false) {
@@ -1294,11 +1296,11 @@ nzbDonkey.logging = function(loggingText, isError = false) {
             console.info("NZBDonkey - INFO: " + loggingText);
         }
     }
-}
+};
 
 // function to show the desktop notification
 nzbDonkey.notification = function(message, type = "info") {
-    if (nzbDonkey.settings.general.showNotifications || type == "error") {
+    if (nzbDonkey.settings.general.showNotifications || type === "error") {
         var iconURL = {
             "info": "icons/NZBDonkey_128.png",
             "error": "icons/NZBDonkey_error_128.png",
@@ -1312,7 +1314,7 @@ nzbDonkey.notification = function(message, type = "info") {
             message: message
         });
     }
-}
+};
 
 // function for the xmlHttpRequest
 nzbDonkey.xhr = function(options) {
@@ -1356,7 +1358,7 @@ nzbDonkey.xhr = function(options) {
         if (options.port) {
             url += ":" + options.port.match(/[^\d]*(\d*)[^\d]*/)[1];
         }
-        if (url != "") {
+        if (url !== "") {
             url += "/";
         }
         if (options.basepath) {
@@ -1368,7 +1370,7 @@ nzbDonkey.xhr = function(options) {
         if (options.parameters) {
             var str = "";
             for (var key in options.parameters) {
-                if (str != "") {
+                if (str !== "") {
                     str += "&";
                 }
                 str += key + "=" + encodeURIComponent(options.parameters[key]);
@@ -1408,12 +1410,12 @@ nzbDonkey.xhr = function(options) {
             request.setRequestHeader("Authorization", "Basic " + b64EncodeUnicode(options.username + ":" + options.password));
         }
         request.timeout = options.timeout;
-        request.setRequestHeader("X-NZBDonkey", true)
+        request.setRequestHeader("X-NZBDonkey", true);
         request.send(options.data);
 
     });
 
-}
+};
 
 // actual start of the script
 // load the settings and initialize the script
@@ -1426,7 +1428,7 @@ nzbDonkey.loadSettings().then(function() {
         nzbDonkey.notification("The script failed to initialize!\n" + e.toString() + "\nPlease restart the Browser.", "error");
     });
 }).catch(function(e) {
-    nzbDonkey.settingsError();
+    nzbDonkey.settingsError(e);
 });
 
 /*------------------*/
@@ -1450,7 +1452,7 @@ function analyzeURL(u) {
     url.fullpath = decodeURIComponent(u.match(/^(([^:/?#]+):)?(\/{0,2}(([^/?#:]*)(:(\d*))?))?([^?#]*)(\?([^#]*))?(#(.*))?/)[8]);
     url.basedomain = url.domain.match(/[^.]*\.[^.]*$/);
     url.query = u.match(/^(([^:/?#]+):)?(\/{0,2}(([^/?#:]*)(:(\d*))?))?([^?#]*)(\?([^#]*))?(#(.*))?/)[10];
-    if (typeof url.query != "undefined") {
+    if (typeof url.query !== "undefined") {
         var parameter = [];
         parameter = url.query.match(/[^&;=]*=[^&;=]*/g);
         if (parameter.length > 0) {
@@ -1465,15 +1467,15 @@ function analyzeURL(u) {
 
 // function to generate the form Data
 function generateFormData(data) {
-    var formData = new FormData;
-    if (typeof data == "object") {
+    var formData = new FormData();
+    if (typeof data === "object") {
         for (var key in data) {
             if (isset(() => data[key])) {
                 if (Array.isArray(data[key])) {
-                    if (data[key].length == 1) {
+                    if (data[key].length === 1) {
                         formData.append(key, data[key][0]);
                     }
-                    else if (data[key].length == 2) {
+                    else if (data[key].length === 2) {
                         formData.append(key, data[key][0], data[key][1]);
                     }
                 }
@@ -1501,10 +1503,10 @@ function isset (accessor) {
   try {
     // Note we're seeing if the returned value of our function is not
     // undefined
-    return typeof accessor() !== 'undefined'
+    return typeof accessor() !== 'undefined';
   } catch (e) {
     // And we're able to catch the Error it would normally throw for
     // referencing a property of undefined
-    return false
+    return false;
   }
 }
