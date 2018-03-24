@@ -25,6 +25,9 @@ var nzbDonkey = {};
 // define global nzbDonkey variable for the nzbDonkey context menu ID
 nzbDonkey.contextMenuID = "NZBDonkey";
 
+// define global nzbDonkey variable for the downloads counter
+nzbDonkey.counter = 0;
+
 // define global nzbDonkey variable for the nzbDoneky settings
 nzbDonkey.settings = {};
 
@@ -406,7 +409,9 @@ nzbDonkey.onBeforeSendHeadersEventListener = function(details) {
 // main backbone function of the script for nzb file search
 // to be called as soon as we have all information to start searching for the nzb files
 nzbDonkey.doTheDonkey = function(nzb) {
-    nzbDonkey.notification("Starting to search for" + " " + nzb.title, "info");
+    nzbDonkey.counter += 1;
+    nzb.downloadID = nzbDonkey.counter;
+    nzbDonkey.notification("Starting to search for" + " " + nzb.title, "info", nzb.downloadID);
     nzbDonkey.searchNZB(nzb).then(function(response) {
         return nzbDonkey.processTitle(response);
     }).then(function(response) {
@@ -416,9 +421,9 @@ nzbDonkey.doTheDonkey = function(nzb) {
     }).then(function(response) {
         return nzbDonkey.execute[nzbDonkey.settings.general.execType](response);
     }).then(function(response) {
-        nzbDonkey.notification(response, "success");
+        nzbDonkey.notification(response, "success", nzb.downloadID);
     }).catch(function(e) {
-        nzbDonkey.notification(e.toString(), "error");
+        nzbDonkey.notification(e.toString(), "error", nzb.downloadID);
         nzbDonkey.logging(e, true);
     });    
 };
@@ -426,7 +431,9 @@ nzbDonkey.doTheDonkey = function(nzb) {
 // main backbone function of the script for the nzb file download interception
 // to be called as soon as we have all information to take over the nzb file download
 nzbDonkey.interceptNzbDownload = function(nzb) {
-    nzbDonkey.notification("Intercepting download of" + " " + nzb.title + ".nzb", "info");
+    nzbDonkey.counter += 1;
+    nzb.downloadID = nzbDonkey.counter;
+    nzbDonkey.notification("Intercepting download of" + " " + nzb.title + ".nzb", "info", nzb.downloadID);
     var options = {
                     "url": nzb.url,
                     "responseType": "text",
@@ -445,9 +452,9 @@ nzbDonkey.interceptNzbDownload = function(nzb) {
     }).then(function(response) {
         return nzbDonkey.execute[nzbDonkey.settings.general.execType](response);
     }).then(function(response) {
-        nzbDonkey.notification(response, "success");
+        nzbDonkey.notification(response, "success", nzb.downloadID);
     }).catch(function(e) {
-        nzbDonkey.notification(e.toString(), "error");
+        nzbDonkey.notification(e.toString(), "error", nzb.downloadID);
         console.error(e);
     });    
 };
@@ -1299,7 +1306,13 @@ nzbDonkey.logging = function(loggingText, isError = false) {
 };
 
 // function to show the desktop notification
-nzbDonkey.notification = function(message, type = "info") {
+nzbDonkey.notification = function(message, type = "info", id = false) {
+    var title = "NZBDonkey";
+    var notificationID = "NZBDonkey_notificatio";
+    if (id) {
+        title += " - #" + id;
+        notificationID += "_" + id;
+    }
     if (nzbDonkey.settings.general.showNotifications || type === "error") {
         var iconURL = {
             "info": "icons/NZBDonkey_128.png",
@@ -1307,10 +1320,10 @@ nzbDonkey.notification = function(message, type = "info") {
             "success": "icons/NZBDonkey_success_128.png"
         };
         nzbDonkey.logging("sending desktop notification");
-        chrome.notifications.create("NZBDonkey_notification", {
-            type: 'basic',
+        chrome.notifications.create(notificationID, {
+            type: "basic",
             iconUrl: iconURL[type],
-            title: 'NZBDonkey',
+            title: title,
             message: message
         });
     }
