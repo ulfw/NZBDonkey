@@ -629,13 +629,6 @@ function NZBDonkeyOptions() {
             "searchURL": "https://nzbindex.com/search/?sort=agedesc&hidespam=1&q=%s"
         }, {
             "active": true,
-            "downloadURL": "https://beta.nzbindex.com/download/%s/",
-            "name": "NZBIndex Beta",
-            "searchPattern": "for=\"release_(\\d{8,})\"",
-            "searchGroup": 1,
-            "searchURL": "https://beta.nzbindex.com/?q=%s"
-        }, {
-            "active": true,
             "downloadURL": "https://binsearch.info/?action=nzb&%s=1",
             "name": "BinSearch",
             "searchPattern": "name=\"(\\d{9,})\"",
