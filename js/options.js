@@ -566,12 +566,126 @@ function NZBDonkeyOptions() {
 
     nzbDonkeyOptions.addTab('searchengines', [{
         type: 'h3',
-        desc: 'Search Engines'
+        desc: 'Default Search Engines'
     }, {
         name: 'searchengines',
         type: 'list',
         head: true,
-        desc: 'DO NOT TOUCH THESE SETTINGS UNLESS YOU KNOW WHAT YOU DO!',
+        desc: 'Deactivate the search engines you do not want ot use. The other settings cannot be changed.',
+        disabled: true,
+        fields: [{
+            type: 'checkbox',
+            name: 'active',
+            desc: 'Active'
+        }, {
+            type: 'text',
+            name: 'name',
+            desc: 'Search Engine Name',
+            disabled: true
+        }, {
+            type: 'text',
+            name: 'searchURL',
+            desc: 'Search URL',
+            disabled: true
+        }, {
+            type: 'select',
+            name: 'responseType',
+            desc: 'Response Type',
+            options: [{
+                desc: '',
+                value: ''
+            }, {
+                desc: 'HTML',
+                value: 'html'
+            }, {
+                desc: 'JSON',
+                value: 'json'
+            }],
+            disabled: true
+        }, {
+            type: 'text',
+            name: 'searchPattern',
+            desc: 'Regex expression or JSON object',
+            disabled: true
+        }, {
+            type: 'select',
+            name: 'searchGroup',
+            options: [{
+                desc: '',
+                value: ''
+            }, {
+                desc: '1',
+                value: 1
+            }, {
+                desc: '2',
+                value: 2
+            }, {
+                desc: '3',
+                value: 3
+            }, {
+                desc: '4',
+                value: 4
+            }, {
+                desc: '5',
+                value: 5
+            }, ],
+            desc: 'Group no.',
+            disabled: true
+        }, {
+            type: 'text',
+            name: 'downloadURL',
+            desc: 'Download URL',
+            disabled: true
+        }, ],
+        default: [{
+            "active": true,
+            "downloadURL": "https://newzleech.com/?m=gen&dl=1&post=%s",
+            "responseType": "html",
+            "name": "Newzleecher",
+            "searchPattern": "name=\"binary\\[\\]\" value=\"(.*?)\"",
+            "searchGroup": 1,
+            "searchURL": "https://newzleech.com/?m=search&q=%s"
+        }, {
+            "active": true,
+            "downloadURL": "https://nzbindex.com/download/%s/",
+            "responseType": "html",
+            "name": "NZBIndex",
+            "searchPattern": "label for=\"box(\\d{8,})\".*?class=\"highlight\"",
+            "searchGroup": 1,
+            "searchURL": "https://nzbindex.com/search/?sort=agedesc&hidespam=1&q=%s"
+        }, {
+            "active": true,
+            "downloadURL": "https://binsearch.info/?action=nzb&%s=1",
+            "responseType": "html",
+            "name": "BinSearch",
+            "searchPattern": "name=\"(\\d{9,})\"",
+            "searchGroup": 1,
+            "searchURL": "https://binsearch.info/?max=100&adv_age=1100&q=%s"
+        }, {
+            "active": true,
+            "downloadURL": "https://binsearch.info/?action=nzb&%s=1&server=2",
+            "responseType": "html",
+            "name": "BinSearch (other groups)",
+            "searchPattern": "name=\"(\\d{9,})\"",
+            "searchGroup": 1,
+            "searchURL": "https://binsearch.info/?max=100&adv_age=1100&server=2&q=%s"
+        }, {
+            "active": true,
+            "downloadURL": "http://nzbking.com/nzb:%s",
+            "responseType": "html",
+            "name": "NZBKing",
+            "searchPattern": "href=\"\\/details:(.*?)\\/\"",
+            "searchGroup": 1,
+            "searchURL": "http://nzbking.com/search/?q=%s"
+        }]
+    }, {
+        type: 'h3',
+        desc: 'Custom Search Engines'
+    }, {
+        name: 'customSearchengines',
+        type: 'list',
+        head: true,
+        desc: 'Set your own search engines.',
         fields: [{
             type: 'checkbox',
             name: 'active',
@@ -585,13 +699,30 @@ function NZBDonkeyOptions() {
             name: 'searchURL',
             desc: 'Search URL'
         }, {
+            type: 'select',
+            name: 'responseType',
+            desc: 'Response Type',
+            options: [{
+                desc: '',
+                value: ''
+            }, {
+                desc: 'HTML',
+                value: 'html'
+            }, {
+                desc: 'JSON',
+                value: 'json'
+            }]
+        }, {
             type: 'text',
             name: 'searchPattern',
-            desc: 'Regex expression'
+            desc: 'Regex expression or JSON object'
         }, {
             type: 'select',
             name: 'searchGroup',
             options: [{
+                desc: '',
+                value: ''
+            },{
                 desc: '1',
                 value: 1
             }, {
@@ -612,42 +743,6 @@ function NZBDonkeyOptions() {
             type: 'text',
             name: 'downloadURL',
             desc: 'Download URL'
-        }, ],
-        default: [{
-            "active": true,
-            "downloadURL": "https://newzleech.com/?m=gen&dl=1&post=%s",
-            "name": "Newzleecher",
-            "searchPattern": "name=\"binary\\[\\]\" value=\"(.*?)\"",
-            "searchGroup": 1,
-            "searchURL": "https://newzleech.com/?m=search&q=%s"
-        }, {
-            "active": true,
-            "downloadURL": "https://nzbindex.com/download/%s/",
-            "name": "NZBIndex",
-            "searchPattern": "label for=\"box(\\d{8,})\".*?class=\"highlight\"",
-            "searchGroup": 1,
-            "searchURL": "https://nzbindex.com/search/?sort=agedesc&hidespam=1&q=%s"
-        }, {
-            "active": true,
-            "downloadURL": "https://binsearch.info/?action=nzb&%s=1",
-            "name": "BinSearch",
-            "searchPattern": "name=\"(\\d{9,})\"",
-            "searchGroup": 1,
-            "searchURL": "https://binsearch.info/?max=100&adv_age=1100&q=%s"
-        }, {
-            "active": true,
-            "downloadURL": "https://binsearch.info/?action=nzb&%s=1&server=2",
-            "name": "BinSearch (other groups)",
-            "searchPattern": "name=\"(\\d{9,})\"",
-            "searchGroup": 1,
-            "searchURL": "https://binsearch.info/?max=100&adv_age=1100&server=2&q=%s"
-        }, {
-            "active": true,
-            "downloadURL": "http://nzbking.com/nzb:%s",
-            "name": "NZBKing",
-            "searchPattern": "href=\"\\/details:(.*?)\\/\"",
-            "searchGroup": 1,
-            "searchURL": "http://nzbking.com/search/?q=%s"
         }]
     }]);
 
@@ -664,13 +759,13 @@ function NZBDonkeyOptions() {
         text: 'If checked, NZBDonkey will intercept NZB file downloads and handle them according to the settings.'
     }, {
         type: 'h3',
-        desc: 'Domains'
+        desc: 'Default Domains'
     }, {
         name: 'domains',
         type: 'list',
         head: true,
-        desc: 'Domains where NZBDonkey shall intercept NZB file downloads.',
-        head: true,
+        desc: 'Default domains where NZBDonkey shall intercept NZB file downloads. Deactivate the domains you do not want to use.',
+        disabled: true,
         fields: [{
             type: 'checkbox',
             name: 'active',
@@ -678,11 +773,15 @@ function NZBDonkeyOptions() {
         }, {
             type: 'text',
             name: 'domain',
-            desc: 'Domain'
+            desc: 'Domain',
+            disabled: true
         }, {
             type: 'select',
             name: 'handling',
             options: [{
+                desc: '',
+                value: ''
+            }, {
                 desc: 'Send Form Data as POST request (default)',
                 value: 'sendFormDataAsPOST'
             }, {
@@ -692,7 +791,8 @@ function NZBDonkeyOptions() {
                 desc: 'Send Form Data as String',
                 value: 'sendFormDataAsString'
             }],
-            desc: 'Handling of Form Data'
+            desc: 'Handling of Form Data',
+            disabled: true
         }],
         default: [{
             "active": true,
@@ -711,6 +811,40 @@ function NZBDonkeyOptions() {
             "domain": "nzbking.com",
             "handling": "sendFormDataAsPOST"
         }],
+    }, {
+        type: 'h3',
+        desc: 'Custom Domains'
+    }, {
+        name: 'customDomains',
+        type: 'list',
+        head: true,
+        desc: 'Set your custom domains where NZBDonkey shall intercept NZB file downloads.',
+        fields: [{
+            type: 'checkbox',
+            name: 'active',
+            desc: 'Active'
+        }, {
+            type: 'text',
+            name: 'domain',
+            desc: 'Domain'
+        }, {
+            type: 'select',
+            name: 'handling',
+            options: [{
+                desc: '',
+                value: ''
+            }, {
+                desc: 'Send Form Data as POST request (default)',
+                value: 'sendFormDataAsPOST'
+            }, {
+                desc: 'Send Form Data as GET request',
+                value: 'sendFormDataAsGET'
+            }, {
+                desc: 'Send Form Data as String',
+                value: 'sendFormDataAsString'
+            }],
+            desc: 'Handling of Form Data'
+        }]
     }]);
 }
 
@@ -1222,7 +1356,7 @@ function NZBDonkeyOptions() {
                 saveFields();
             }
             row = addListRow($tbody, null, options.fields, fieldsMap, saveFields,
-                remove, false, options.sortable, animate, key);
+                remove, false, options.sortable, animate, key, options.disabled);
             rows.push(row);
             requestAnimationFrame(function() {
                 var rowValues = rows.map(function(getValue) {
@@ -1244,19 +1378,21 @@ function NZBDonkeyOptions() {
             var fields = i === 0 && options.first ? options.first : options.fields;
             row = addListRow($tbody, rowData, fields, fieldsMap, saveFields,
                 remove, i === 0 && options.first,
-                options.sortable, false, key);
+                options.sortable, false, key, options.disabled);
             return row;
         });
 
         if (options.first && !rows.length) {
             var row = addListRow($tbody, null, options.first, fieldsMap, saveFields,
-                function() {}, true, options.sortable, false, key);
+                function() {}, true, options.sortable, false, key, options.disabled);
             rows.push(row);
             saveFields();
         }
 
         // Always start with one new row.
-        addNewRow();
+        if (!options.disabled) {
+            addNewRow();
+        }
 
         // Check if columns with the `bindTo` should be displayed.
         if (options.head) {
@@ -1265,7 +1401,7 @@ function NZBDonkeyOptions() {
 
         // When user edits the last row, add another.
         function onChange(e) {
-            if ($tbody.lastChild.contains(e.target)) {
+            if ($tbody.lastChild.contains(e.target) && !options.disabled) {
                 addNewRow(true);
             }
         }
@@ -1329,7 +1465,7 @@ function NZBDonkeyOptions() {
     };
 
     function addListRow($table, values, fields, fieldsMap, save, remove,
-        unremovable, sort, animate, key) {
+        unremovable, sort, animate, key, isdisabled) {
         var $tr = h('tr');
         if (unremovable) {
             $tr.classList.add('unremovable');
@@ -1464,20 +1600,21 @@ function NZBDonkeyOptions() {
 
             return update;
         });
-
-        $tr.append(h('td', h('a.delete', {
-            onclick: function() {
-                fieldUpdates.forEach(function(update) {
-                    update.hide();
-                });
-                setTimeout(function() {
-                    hideTR($tr, function() {
-                        $tr.remove();
+        if (!isdisabled) {
+            $tr.append(h('td', h('a.delete', {
+                onclick: function() {
+                    fieldUpdates.forEach(function(update) {
+                        update.hide();
                     });
-                }, 250);
-                remove();
-            },
-        }, 'delete')));
+                    setTimeout(function() {
+                        hideTR($tr, function() {
+                            $tr.remove();
+                        });
+                    }, 250);
+                    remove();
+                },
+            }, 'delete')));
+        }
 
         if (!unremovable && sort) {
             $tr.append(h('td', h('a.sort', 'sort')));
@@ -1549,9 +1686,7 @@ function NZBDonkeyOptions() {
             $field.setAttribute('data-title', option.desc);
         }
         if (option.disabled) {
-            $field.querySelectorAll('input, select, textarea').forEach(function($f) {
-                $f.setAttribute('disabled', true);
-            });
+            $field.setAttribute('disabled', true);
         }
         return $field;
     };

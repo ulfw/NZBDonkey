@@ -242,6 +242,8 @@ nzbDonkey.loadSettings = function() {
                     nzbDonkey.settings[keys[0]][keys[1]] = obj[key];
                 }
             }
+            nzbDonkey.settings.interception.domains = nzbDonkey.settings.interception.domains.concat(nzbDonkey.settings.interception.customDomains);
+            nzbDonkey.settings.searchengines = nzbDonkey.settings.searchengines.concat(nzbDonkey.settings.customSearchengines);
             nzbDonkey.logging("settings successfully loaded");
             resolve();
         });
