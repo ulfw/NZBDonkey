@@ -49,15 +49,6 @@ $(document).ready(function() {
                     window.location.reload();
                 });
                 break;
-            case "#advanced":
-                $("#AdvancedWarning").modal("show");
-                let tab = $(this);
-                $("#AdvancedWarningConfirmed").click(function() {
-                    $(this).off();
-                    $("#AdvancedWarning").modal("hide");
-                    switchTabs(tab);
-                });
-                break;
             default:
                 switchTabs($(this));
         }
