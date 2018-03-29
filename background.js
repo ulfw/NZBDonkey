@@ -1,9 +1,8 @@
 // listen for the onInstalled event
 chrome.runtime.onInstalled.addListener(function(details) {
     if (details.OnInstalledReason !== 'chrome_update') {
-        // delete the stored searchengines settings to force loading the default settings
-        // currently not required because no changes to these default settings have been done
-        // chrome.storage.sync.remove('searchengines.searchengines');
+        // delete the nzb download interception domains settings to force loading the default settings
+        chrome.storage.sync.remove('interception.domains');
 
         // open the options page to have the default settings saved
         chrome.runtime.openOptionsPage();
@@ -284,14 +283,6 @@ nzbDonkey.setupNzbDownloadInterception = function() {
             }
         }
 
-        // generate the special domains object
-        nzbDonkey.specialDomains = {};
-        if (isset(() => nzbDonkey.settings.interception.specialDomains) && nzbDonkey.settings.interception.specialDomains.length > 0) {
-            for (var i = 0; i < nzbDonkey.settings.interception.specialDomains.length; i++) {
-                nzbDonkey.specialDomains[nzbDonkey.settings.interception.specialDomains[i].domain] = nzbDonkey.settings.interception.specialDomains[i].treatment;
-            }
-        }
-
         // setting the event listener to intercept nzb file downloads
         nzbDonkey.logging("setting event listener for the onHeadersReceived event");
         chrome.webRequest.onHeadersReceived.addListener(nzbDonkey.onHeadersReceivedEventListener, {urls: Domains}, ['responseHeaders','blocking']);
@@ -335,7 +326,7 @@ nzbDonkey.onHeadersReceivedEventListener = function(details){
                         nzb.title = nzb.title.match(/^(.*){{(.*?)}}/m)[1];
                     }
                     else {
-                        // if not set the password to empty anyway to avoid undefined errors
+                        // if not, set the password to empty anyway to avoid undefined errors
                         nzb.password = "";
                     }
                     // get the request url for this nzb file
@@ -345,23 +336,41 @@ nzbDonkey.onHeadersReceivedEventListener = function(details){
                         nzbDonkey.logging("found post form data for intercepted nzb file request");
                         // check if the domain needs special handling for the form data
                         var url = analyzeURL(nzb.url);
-                        if (isset(() => nzbDonkey.specialDomains[url.basedomain])) {
-                            switch(nzbDonkey.specialDomains[url.basedomain]) {
-                                case "sendFormDataAsString": 
-                                    nzbDonkey.logging(url.basedomain + ": " + "this domain requires special handling sendFormDataAsString");
-                                    var formData = "";
-                                    for (let key in nzbDonkey.allRequestIDs[details.requestId].formData) {
-                                        if (isset(() => nzbDonkey.allRequestIDs[details.requestId].formData[key][0])) {
-                                            formData += key + "=" + nzbDonkey.allRequestIDs[details.requestId].formData[key][0] + "&";
+                        // handle the Form Data according to the settings
+                        var currentDomain = nzbDonkey.settings.interception.domains.filter(function(domain){ return domain.domain == url.basedomain });
+                        switch(currentDomain[0].handling) {
+                            case "sendFormDataAsString": 
+                                nzbDonkey.logging(url.basedomain + ": " + "this domain requires special handling sendFormDataAsString");
+                                var formData = "";
+                                for (let key in nzbDonkey.allRequestIDs[details.requestId].formData) {
+                                    if (isset(() => nzbDonkey.allRequestIDs[details.requestId].formData[key][0])) {
+                                        formData += key + "=" + nzbDonkey.allRequestIDs[details.requestId].formData[key][0] + "&";
+                                    }
+                                }
+                                nzb.formData = formData.replace(/\&$/i, "");
+                                break;
+                            case "sendFormDataAsGET":
+                                nzbDonkey.logging(url.basedomain + ": " + "this domain requires special handling sendFormDataAsGET");
+                                var parameters = {};
+                                var data = nzbDonkey.allRequestIDs[details.requestId].formData;
+                                for (var key in data) {
+                                    if (Array.isArray(data[key])) {
+                                        if (/.*\[\]$/.test(key)) {
+                                            parameters[key.match(/(.*)\[\]$/)[1]] = data[key];
+                                        }
+                                        else {
+                                            parameters[key] = data[key][0];
                                         }
                                     }
-                                    nzb.formData = formData.replace(/\&$/i, "");
-                                    break;
-                            }
-                        }
-                        // if no special handling is needed, just generate the form data
-                        else {
-                            nzb.formData = generateFormData(nzbDonkey.allRequestIDs[details.requestId].formData);
+                                    else {
+                                        parameters[key] = data[key];
+                                    }
+                                }
+                                nzb.parameters = parameters;
+                                break;
+                            case "sendFormDataAsPOST":
+                                nzb.formData = generateFormData(nzbDonkey.allRequestIDs[details.requestId].formData);
+                                break;
                         }
                     }
                     // calling the function to take over the nzb file download
@@ -438,7 +447,8 @@ nzbDonkey.interceptNzbDownload = function(nzb) {
                     "url": nzb.url,
                     "responseType": "text",
                     "timeout": 120000,
-                    "data": nzb.formData
+                    "data": nzb.formData,
+                    "parameters": nzb.parameters
                 };
     nzbDonkey.xhr(options).then(function(response) {
         return Promise.all([nzbDonkey.checkNZBfile(response, false), response]);
@@ -1018,7 +1028,7 @@ nzbDonkey.execute.download = function(nzb) {
             }
             else {
                 nzbDonkey.logging("initiated the download");
-                nzbDonkey.notification("Starting to downloading nzb file" + ":\n" + filename);
+                nzbDonkey.notification("Starting to download nzb file" + ":\n" + filename, nzb.downloadID);
             }
         });
         chrome.downloads.onChanged.addListener(function(details) {
@@ -1344,7 +1354,7 @@ nzbDonkey.xhr = function(options) {
     		"path": path,
     		"parameters": {
     			"parameter1": value1,
-    			"parameter2": value2
+    			"parameter2": [ value2, value3 ]
     		},
     		"data": data,
     		"responseType": responseType,
@@ -1380,17 +1390,33 @@ nzbDonkey.xhr = function(options) {
         if (options.path) {
             url += options.path;
         }
-        if (options.parameters) {
-            var str = "";
-            for (var key in options.parameters) {
+    }
+    if (options.parameters) {
+        var str = "";
+        for (var key in options.parameters) {
+            if (Array.isArray(options.parameters[key])) {
+                for (var i = 0 ; i < options.parameters[key].length ; i++) {
+                    if (str !== "") {
+                        str += "&";
+                    }
+                    str += key + "=" + encodeURIComponent(options.parameters[key][i]);
+                }
+            }
+            else {
                 if (str !== "") {
                     str += "&";
                 }
                 str += key + "=" + encodeURIComponent(options.parameters[key]);
             }
+        }
+        if (/\?/.test(url)) {
+            url += "&" + str;
+        }
+        else {
             url += "?" + str;
         }
     }
+
     var method = options.data ? "POST" : "GET";
 
     return new Promise(function(resolve, reject) {
@@ -1483,8 +1509,13 @@ function generateFormData(data) {
     var formData = new FormData();
     if (typeof data === "object") {
         for (var key in data) {
-            if (isset(() => data[key])) {
-                if (Array.isArray(data[key])) {
+            if (Array.isArray(data[key])) {
+                if (/.*\[\]$/.test(key)) {
+                    for (var i = 0 ; i < data[key].length ; i++) {
+                        formData.append(key, data[key][i].toString());
+                    }
+                }
+                else {
                     if (data[key].length === 1) {
                         formData.append(key, data[key][0]);
                     }
@@ -1492,9 +1523,9 @@ function generateFormData(data) {
                         formData.append(key, data[key][0], data[key][1]);
                     }
                 }
-                else {
-                    formData.append(key, data[key]);
-                }
+            }
+            else {
+                formData.append(key, data[key]);
             }
         }
         return formData;

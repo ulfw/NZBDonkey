@@ -41,6 +41,9 @@ If there is always the error "this is not a valid nzb file" try to add the domai
 If no special treatment option is working for this web site please open an issue on github providing as much information about this web site as possible.
 
 ## Change log
+### v0.5.2
+* Bug fix: intercepting nzb download not working correctly when selecting several nzb files on nzbindex.com
+
 ### v0.5.1
 * Bug fix: forgot to delete debug alert
 

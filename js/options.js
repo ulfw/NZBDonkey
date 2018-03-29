@@ -679,48 +679,38 @@ function NZBDonkeyOptions() {
             type: 'text',
             name: 'domain',
             desc: 'Domain'
-        }],
-        default: [{
-            "active": true,
-            "domain": "newzleech.com"
-        }, {
-            "active": true,
-            "domain": "nzbindex.com"
-        }, {
-            "active": true,
-            "domain": "binsearch.info"
-        }, {
-            "active": true,
-            "domain": "nzbking.com"
-        }],
-    }, {
-        type: 'h3',
-        desc: 'Domains who need special treatment'
-    }, {
-        name: 'specialDomains',
-        desc: 'Some domains may need some special treatment for the NZB file download interception to work.\nAdd them to below list and choose the special treatment to be used.',
-        type: 'list',
-        head: true,
-        fields: [{
-            type: 'text',
-            name: 'domain',
-            desc: 'Domain'
         }, {
             type: 'select',
-            name: 'treatment',
+            name: 'handling',
             options: [{
-                desc: '',
-                value: ''
+                desc: 'Send Form Data as POST request (default)',
+                value: 'sendFormDataAsPOST'
+            }, {
+                desc: 'Send Form Data as GET request',
+                value: 'sendFormDataAsGET'
             }, {
                 desc: 'Send Form Data as String',
                 value: 'sendFormDataAsString'
             }],
-            desc: 'Special treatment'
+            desc: 'Handling of Form Data'
         }],
         default: [{
+            "active": true,
+            "domain": "newzleech.com",
+            "handling": "sendFormDataAsPOST"
+        }, {
+            "active": true,
+            "domain": "nzbindex.com",
+            "handling": "sendFormDataAsGET"
+        }, {
+            "active": true,
             "domain": "binsearch.info",
-            "treatment": "sendFormDataAsString"
-        }]
+            "handling": "sendFormDataAsString"
+        }, {
+            "active": true,
+            "domain": "nzbking.com",
+            "handling": "sendFormDataAsPOST"
+        }],
     }]);
 }
 
