@@ -596,7 +596,7 @@ function NZBDonkeyOptions() {
         }, {
             type: 'text',
             name: 'searchPattern',
-            desc: 'Regex expression or JSON object',
+            desc: 'Regex expression or JSON object path',
             disabled: true
         }, {
             type: 'select',
@@ -644,6 +644,14 @@ function NZBDonkeyOptions() {
             "searchPattern": "label for=\"box(\\d{8,})\".*?class=\"highlight\"",
             "searchGroup": 1,
             "searchURL": "https://nzbindex.com/search/?sort=agedesc&hidespam=1&q=%s"
+        }, {
+            "active": true,
+            "downloadURL": "https://beta.nzbindex.com/download/%s/",
+            "responseType": "json",
+            "name": "NZBIndex (beta)",
+            "searchPattern": "results.0.id",
+            "searchGroup": "",
+            "searchURL": "https://beta.nzbindex.com/search/json?sort=agedesc&hidespam=1&q=%s"
         }, {
             "active": true,
             "downloadURL": "https://binsearch.info/?action=nzb&%s=1",
@@ -706,7 +714,7 @@ function NZBDonkeyOptions() {
         }, {
             type: 'text',
             name: 'searchPattern',
-            desc: 'Regex expression or JSON object'
+            desc: 'Regex expression or JSON object path'
         }, {
             type: 'select',
             name: 'searchGroup',

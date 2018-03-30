@@ -242,8 +242,12 @@ nzbDonkey.loadSettings = function() {
                     nzbDonkey.settings[keys[0]][keys[1]] = obj[key];
                 }
             }
-            nzbDonkey.settings.interception.domains = nzbDonkey.settings.interception.domains.concat(nzbDonkey.settings.interception.customDomains);
-            nzbDonkey.settings.searchengines = nzbDonkey.settings.searchengines.concat(nzbDonkey.settings.customSearchengines);
+            if (isset(() => nzbDonkey.settings.interception.customDomains)) {
+                nzbDonkey.settings.interception.domains = nzbDonkey.settings.interception.domains.concat(nzbDonkey.settings.interception.customDomains);
+            }
+            if (isset(() => nzbDonkey.settings.customSearchengines)) {
+                nzbDonkey.settings.searchengines = nzbDonkey.settings.searchengines.concat(nzbDonkey.settings.customSearchengines);
+            }
             nzbDonkey.logging("settings successfully loaded");
             resolve();
         });
@@ -571,14 +575,30 @@ nzbDonkey.searchNZB = function(nzb) {
                 };
                 nzbDonkey.xhr(options).then(function(response) {
                     // if we have a response, check if we have a result
-                    let re = new RegExp(nzbDonkey.settings.searchengines[i].searchPattern, "i");
-                    nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the search engine returned a results page");
-                    nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "search pattern is set to: " + nzbDonkey.settings.searchengines[i].searchPattern);
-                    nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "searching for a result in the results page");
-                    if (re.test(response)) {
+                    var nzbID = false;
+                    switch (nzbDonkey.settings.searchengines[i].responseType) {
+                        case "html":
+                            let re = new RegExp(nzbDonkey.settings.searchengines[i].searchPattern, "i");
+                            nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the search engine returned a html results page");
+                            nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "search pattern is set to: " + nzbDonkey.settings.searchengines[i].searchPattern);
+                            nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "searching for a result in the results page");
+                            if (re.test(response)) {
+                                nzbID = response.match(re)[nzbDonkey.settings.searchengines[i].searchGroup];
+                            }
+                        break;
+                        case "json":
+                            nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the search engine returned a JSON response");
+                            nzbID = JSON.parse(response);
+                            var objectPath = nzbDonkey.settings.searchengines[i].searchPattern.split(".");
+                            for (let j = 0 ; j < objectPath.length ; j++) {
+                                nzbID = nzbID[objectPath[j]];
+                            }
+                        break;
+                    }
+                    if (nzbID) {
                         // if we have a result, generate the url for the nzb file
                         nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "nzb file found");
-                        let nzbDownloadURL = nzbDonkey.settings.searchengines[i].downloadURL.replace(/%s/, response.match(re)[nzbDonkey.settings.searchengines[i].searchGroup]);
+                        let nzbDownloadURL = nzbDonkey.settings.searchengines[i].downloadURL.replace(/%s/, nzbID);
                         nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "the nzb file download url is" + ": " + nzbDownloadURL);
                         nzbDonkey.logging(nzbDonkey.settings.searchengines[i].name + ": " + "trying to download the nzb file");
                         // and download the nzb file

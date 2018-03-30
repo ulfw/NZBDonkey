@@ -218,11 +218,11 @@
                                 <strong>Active:</strong> check if you want to use this search engine<br />
                                 <strong>Search Engine Name:</strong> name of the search engine<br />
                                 <strong>Search URL:</strong> URL called for a NZB file search. Use "%s" for the search string.<br />
-                                <strong>Regex expression:</strong> regex expression to be used to search in the search results page for the NZB file ID. The NZB file ID has to be in a capturing group ().<br />
+                                <strong>Response Type:</strong> Type of response sent back from the search engine. Can be either a HTML page or a JSON object.<br />
+                                <strong>Regex expression:</strong> If response type is HTML, this is the regex expression to be used to search in the HTML search results page for the NZB file ID. The NZB file ID has to be in a capturing group ().<br />
+                                <strong>JSON object path:</strong> If response type is JSON, this is the JSON object path for the NZB file ID (divided by periods). Example: { results: [ { nzbid: 123456 }, ... ], ... } => "results.0.nzbid"<br />
                                 <strong>Group no.:</strong> number of the capturing group in the regex expression that does contain the NZB file ID.<br />
                                 <strong>Download URL:</strong> URL called to download the NZB file. Use "%s" for the NZB file ID.<br /><br />
-                                <strong>CAUTION: these search engines settings will likely be overwritten on updates of this extension.</strong><br />
-                                Make sure to save your personal search engine settings.
                             </div>
                         </div>
                     </div>
