@@ -1,8 +1,9 @@
 // listen for the onInstalled event
 chrome.runtime.onInstalled.addListener(function(details) {
     if (details.OnInstalledReason !== 'chrome_update') {
-        // delete the nzb download interception domains settings to force loading the default settings
+        // delete the nzb download interception domains and search engines settings to force loading the default settings
         chrome.storage.sync.remove('interception.domains');
+        chrome.storage.sync.remove('searchengines.searchengines');
 
         // open the options page to have the default settings saved
         chrome.runtime.openOptionsPage();
@@ -242,10 +243,10 @@ nzbDonkey.loadSettings = function() {
                     nzbDonkey.settings[keys[0]][keys[1]] = obj[key];
                 }
             }
-            if (isset(() => nzbDonkey.settings.interception.customDomains)) {
+            if (isset(() => nzbDonkey.settings.interception.customDomains) && Array.isArray(nzbDonkey.settings.interception.customDomains) && nzbDonkey.settings.interception.customDomains.length > 0) {
                 nzbDonkey.settings.interception.domains = nzbDonkey.settings.interception.domains.concat(nzbDonkey.settings.interception.customDomains);
             }
-            if (isset(() => nzbDonkey.settings.customSearchengines)) {
+            if (isset(() => nzbDonkey.settings.customSearchengines) && Array.isArray(nzbDonkey.settings.customSearchengines) && nzbDonkey.settings.customSearchengines.length > 0) {
                 nzbDonkey.settings.searchengines = nzbDonkey.settings.searchengines.concat(nzbDonkey.settings.customSearchengines);
             }
             nzbDonkey.logging("settings successfully loaded");

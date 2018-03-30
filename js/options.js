@@ -596,7 +596,7 @@ function NZBDonkeyOptions() {
         }, {
             type: 'text',
             name: 'searchPattern',
-            desc: 'Regex expression or JSON object path',
+            desc: 'JSON object path / Regex expression',
             disabled: true
         }, {
             type: 'select',
@@ -714,7 +714,7 @@ function NZBDonkeyOptions() {
         }, {
             type: 'text',
             name: 'searchPattern',
-            desc: 'Regex expression or JSON object path'
+            desc: 'JSON object path / Regex expression'
         }, {
             type: 'select',
             name: 'searchGroup',
@@ -757,13 +757,16 @@ function NZBDonkeyOptions() {
         type: 'plaintext',
         text: 'If checked, NZBDonkey will intercept NZB file downloads and handle them according to the settings.'
     }, {
+        type: 'plaintext',
+        text: 'Note: NZB file download interception will not work on sites which check the referrer in order to prevent direkt access.'
+    }, {
         type: 'h3',
         desc: 'Default Domains'
     }, {
         name: 'domains',
         type: 'list',
         head: true,
-        desc: 'Default domains where NZBDonkey shall intercept NZB file downloads. Deactivate the domains you do not want to use.',
+        desc: 'Default domains where NZBDonkey will intercept NZB file downloads. Deactivate the domains you do not want to use.',
         disabled: true,
         fields: [{
             type: 'checkbox',
