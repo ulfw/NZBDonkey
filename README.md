@@ -17,7 +17,7 @@ Add-on to automatically download NZB files or send them to NZBGet, SABnzbd or Sy
 * Highly configurable
   * set target for the NZB file:
     * download to the browsers download folder
-    * directly send to SABnzbd, NZBGet or Synology DownloadStation
+    * directly send to SABnzbd, NZBGet, Synology DownloadStation or premiumize.me Downloader
   * supports the setting of a default category or automatic categories
   * supports simple checking of the NZB file for completeness
   * advanced settings to configure the NZB search engines
